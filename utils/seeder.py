@@ -4,12 +4,16 @@ from repository import user_repo
 from utils import bcrypt as bcrypt_utils
 from config.env import Env
 from core.logging import logger
+from utils import helper
 
 def seedInitialUsers(user_repo: user_repo.UserRepo):
     users: list[user_model.UserModel] = []
+    time_now = helper.timeNowEpoch()
     if Env.INITIAL_CUSTOMER_USER_USERNAME and Env.INITIAL_CUSTOMER_USER_PASSWORD:
         users.append(
             user_model.UserModel(
+                id=helper.generateUUID4(),
+                created_at=time_now,
                 fullname=Env.INITIAL_CUSTOMER_USER_USERNAME.title().replace("_", " "),
                 username=Env.INITIAL_CUSTOMER_USER_USERNAME,
                 email=f"{Env.INITIAL_CUSTOMER_USER_USERNAME}@gmail.com",
@@ -21,6 +25,8 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
     if Env.INITIAL_SELLER_USER_USERNAME and Env.INITIAL_SELLER_USER_PASSWORD:
         users.append(
             user_model.UserModel(
+                id=helper.generateUUID4(),
+                created_at=time_now,
                 fullname=Env.INITIAL_SELLER_USER_USERNAME.title().replace("_", " "),
                 username=Env.INITIAL_SELLER_USER_USERNAME,
                 email=f"{Env.INITIAL_SELLER_USER_USERNAME}@gmail.com",
