@@ -15,11 +15,13 @@ class PublicUserModel(BaseModel):
     phone_number: str = ""
     gender: Literal[USER_GENDER_ENUMS] = "male"
     birth_date: str = "" # DD-MM-YYYY
+    profile_picture: str = "" # fileanme
 
     last_active: int = 0
 
 class UserModel(MyBaseModel, PublicUserModel):
     _coll_name = "users"
+    _bucket_name: str = "users"
     _custom_indexes = [
         _MyBaseModel_Index(keys=[("username", -1)], unique=True),
         _MyBaseModel_Index(keys=[("email", -1)], unique=True),
