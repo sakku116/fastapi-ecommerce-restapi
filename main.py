@@ -17,11 +17,14 @@ from pytz import timezone
 from uvicorn.config import LOGGING_CONFIG
 
 from config.env import Env
+from config.mongodb import getMongoDB
 from core import middlewares
 from core.exceptions import handlers as exception_handlers
 from core.exceptions.http import CustomHttpException
 from core.logging import logger, setupLogger
 from handler import auth_handler
+from repository import user_repo
+from utils import seeder as seeder_utils, mongodb as mongodb_utils
 
 requests.packages.urllib3.disable_warnings()
 
@@ -103,17 +106,25 @@ if __name__ == "__main__":
         if key not in dotenv_values:
             logger.warning(f"{key} is missing from .env file")
 
+    user_repo_ = None
+
     # process command line argumants (if any)
     args = sys.argv
     if len(args) > 1:
-        supported_args = []
+        supported_args = ["--ensure-indexes", "--seed-initial-users"]
         # validate args
         for arg in args[1:]:
             if arg not in supported_args:
                 raise Exception(f"unsupported argument: {arg}")
 
         for arg in args[1:]:
-            pass
+            if arg == "--seed-initial-users":
+                if not user_repo:
+                    user_repo_ = user_repo.UserRepo(mongo_db=getMongoDB())
+                seeder_utils.seedInitialUsers(user_repo=user_repo_)
+
+            elif arg == "--ensure-indexes":
+                mongodb_utils.ensureIndexes(db=getMongoDB())
 
     uvicorn.run(
         "main:app",
