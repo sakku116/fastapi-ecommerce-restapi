@@ -38,6 +38,9 @@ logging.basicConfig(
     datefmt="%d-%m-%Y %H:%M:%S",
 )
 
+# suppress mongodb debug line
+logging.getLogger("pymongo").setLevel(logging.WARNING)
+
 # setup custom logger
 setupLogger()
 
