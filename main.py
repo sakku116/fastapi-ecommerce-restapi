@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
         for arg in args[1:]:
             if arg == "--seed-initial-users":
-                if not user_repo:
+                if not user_repo_:
                     user_repo_ = user_repo.UserRepo(mongo_db=getMongoDB())
                 seeder_utils.seedInitialUsers(user_repo=user_repo_)
 
