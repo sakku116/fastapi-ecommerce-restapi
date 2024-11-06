@@ -1,15 +1,9 @@
 from pydantic import BaseModel
 from datetime import datetime
+from domain.model import user_model
 
-class CurrentUser(BaseModel):
-    id: str
-    role: str = ""
-    fullname: str = ""
-    username: str = ""
-    email: str = ""
-    phone_number: str = ""
-    gender: str = ""
-    birth_date: str = "" # DD-MM-YYYY
+class CurrentUser(user_model.PublicUserModel):
+    pass
 
 class JwtPayload(CurrentUser):
     sub: str
