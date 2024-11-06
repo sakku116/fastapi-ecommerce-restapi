@@ -34,7 +34,7 @@ def ensureIndexes(db: Database):
                     member: MyBaseModel = member()
                     try:
                         coll_name = member._coll_name
-                        indexes = member._indexes
+                        indexes = member._default_indexes + member._custom_indexes
                         logger.info(f"\tEnsuring index for '{coll_name}' collection")
                         existing_indexes = list(db[coll_name].list_indexes())
                         for index in indexes:
