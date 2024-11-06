@@ -9,30 +9,46 @@ AuthRouter = APIRouter(
 )
 
 
-@AuthRouter.post("/register", response_model=auth_rest.RegisterResp)
+@AuthRouter.post(
+    "/register", response_model=auth_rest.RegisterResp[auth_rest.BaseTokenResp]
+)
 def register(
     payload: auth_rest.RegisterReq = Depends(),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.register(payload=payload)
+    resp.data = auth_rest.BaseTokenResp(
+        access_token=resp.access_token,
+        refresh_token=resp.refresh_token,
+    )
     return resp
 
 
-@AuthRouter.post("/login", response_model=auth_rest.LoginResp)
+@AuthRouter.post("/login", response_model=auth_rest.LoginResp[auth_rest.BaseTokenResp])
 def login(
     payload: auth_rest.LoginReq = Depends(),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.login(payload=payload)
+    resp.data = auth_rest.BaseTokenResp(
+        access_token=resp.access_token,
+        refresh_token=resp.refresh_token,
+    )
     return resp
 
 
-@AuthRouter.post("/refresh-token", response_model=auth_rest.RefreshTokenResp)
+@AuthRouter.post(
+    "/refresh-token", response_model=auth_rest.RefreshTokenResp[auth_rest.BaseTokenResp]
+)
 def refresh_token(
     payload: auth_rest.RefreshTokenReq = Depends(),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.refreshToken(payload=payload)
+    resp.data = auth_rest.BaseTokenResp(
+        access_token=resp.access_token,
+        refresh_token=resp.refresh_token,
+    )
     return resp
 
 
