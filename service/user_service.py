@@ -17,12 +17,12 @@ class UserService:
     def getMe(self, current_user: auth_dto.CurrentUser) -> user_rest.GetMeRespData:
         return user_rest.GetMeRespData(**current_user.model_dump())
 
-    def updateMyProfile(self, current_user: auth_dto.CurrentUser, payload: user_rest.UpdateMyProfileReq) -> user_rest.UpdateMyProfileRespData:
-        user = self.user_repo.getById(id=current_user.id)
+    def updateProfile(
+        self, user_id: str, payload: user_rest.UpdateProfileReq
+    ) -> user_rest.UpdateProfileRespData:
+        user = self.user_repo.getById(id=user_id)
         if not user:
-            exc = CustomHttpException(
-                status_code=404, message="User not found"
-            )
+            exc = CustomHttpException(status_code=404, message="User not found")
             logger.error(exc)
             raise exc
 
@@ -60,43 +60,14 @@ class UserService:
                 logger.error(exc)
                 raise exc
 
-        # validate password
-        if payload.password != None:
-            if payload.confirm_password == None:
-                exc = CustomHttpException(
-                    status_code=400, message="Confirm password is required when changing password"
-                )
-                logger.error(exc)
-                raise exc
-
-            if payload.confirm_password != payload.password:
-                exc = CustomHttpException(
-                    status_code=400, message="Password and confirm password does not match"
-                )
-                logger.error(exc)
-                raise exc
-
-            if len(payload.password) < 7:
-                exc = CustomHttpException(
-                    status_code=400, message="Password must be at least 7 characters long"
-                )
-                logger.error(exc)
-                raise exc
-
-            if " " in payload.password:
-                exc = CustomHttpException(
-                    status_code=400, message="Password must not contain spaces"
-                )
-                logger.error(exc)
-                raise exc
-
         # validate birth_date
         if payload.birth_date != None:
             try:
                 datetime.strptime(payload.birth_date, "%d-%m-%Y")
             except Exception as e:
                 exc = CustomHttpException(
-                    status_code=400, message="Invalid birth date, format should be DD-MM-YYYY"
+                    status_code=400,
+                    message="Invalid birth date, format should be DD-MM-YYYY",
                 )
                 logger.error(exc)
                 raise exc
@@ -120,17 +91,68 @@ class UserService:
         if payload.birth_date != None:
             user.birth_date = payload.birth_date
 
-        if payload.profile_picture != None:
-            user.profile_picture = payload.profile_picture
-
-        if payload.password != None:
-            user.password = bcrypt_utils.hashPassword(payload.password)
-
         # re-validate user
-        user.model_validate() # dont need to raise exception because ValidationError automatically handled by exceptions handler
+        user.model_validate()  # dont need to raise exception because ValidationError automatically handled by exceptions handler
 
         # update user
+        user.updated_at = datetime.now()
+        user.updated_by = user_id
         self.user_repo.update(id=user.id, data=user)
 
-        return user_rest.UpdateMyProfileRespData(**user.model_dump())
+        return user_rest.UpdateProfileRespData(**user.model_dump())
 
+    def checkPassword(self, user_id: str, payload: user_rest.CheckPasswordReq) -> bool:
+        user = self.user_repo.getById(id=user_id)
+        if not user:
+            exc = CustomHttpException(status_code=404, message="User not found")
+            logger.error(exc)
+            raise exc
+
+        is_pw_match = bcrypt_utils.checkPassword(payload.password, user.password)
+        if not is_pw_match:
+            exc = CustomHttpException(status_code=400, message="Invalid password")
+            logger.error(exc)
+            raise exc
+
+        return True
+
+    def updatePassword(
+        self, user_id: str, payload: user_rest.UpdatePasswordReq
+    ) -> user_rest.UpdatePasswordRespData:
+        user = self.user_repo.getById(id=user_id)
+        if not user:
+            exc = CustomHttpException(status_code=404, message="User not found")
+            logger.error(exc)
+            raise exc
+
+        # validate
+        if len(payload.new_password) < 7:
+            exc = CustomHttpException(
+                status_code=400,
+                message="New password must be at least 7 characters long",
+            )
+            logger.error(exc)
+            raise exc
+
+        if " " in payload.new_password:
+            exc = CustomHttpException(
+                status_code=400, message="New password must not contain spaces"
+            )
+            logger.error(exc)
+            raise exc
+
+        if payload.new_password != payload.confirm_password:
+            exc = CustomHttpException(
+                status_code=400,
+                message="New password and confirm password does not match",
+            )
+            logger.error(exc)
+            raise exc
+
+        # update user
+        user.updated_at = datetime.now()
+        user.updated_by = user_id
+        user.password = bcrypt_utils.hashPassword(payload.new_password)
+        self.user_repo.update(id=user.id, data=user)
+
+        return user_rest.UpdatePasswordRespData(**user.model_dump())
