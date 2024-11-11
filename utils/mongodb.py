@@ -26,9 +26,8 @@ def ensureIndexes(db: Database):
                     and member_name != "BaseModel"  # exclude pydantic.BaseModel
                 ):
                     try:
-                        member: MyBaseModel = member()
-                        coll_name = member._coll_name
-                        indexes = member._default_indexes + member._custom_indexes
+                        coll_name = member.getCollName()
+                        indexes = member.getDefaultIndexes() + member.getCustomIndexes()
                         logger.info(f"\tEnsuring index for '{coll_name}' collection")
                         existing_indexes = list(db[coll_name].list_indexes())
                         for index in indexes:
