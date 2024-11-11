@@ -32,25 +32,37 @@ def generatePaginationNumberList(
         + [i for i in range(current_page + 1, max_page_num_right + current_page + 1)]
     )
 
+
 class BaseResp_Meta(BaseModel):
     code: int = 200
     error: bool = False
     message: str = "OK"
     error_detail: Union[str, list, dict, None] = None
 
+
 class BaseResp(BaseModel):
     meta: BaseResp_Meta = BaseResp_Meta()
+
 
 class RespData(BaseResp, Generic[M]):
     data: M = None  # support any object
 
-class PaginationMeta(BaseModel):
+
+class PaginatedData(BaseModel, Generic[M]):
     total: int = 0
     current_page: int = 0
     page_total: int = 0
     page_num_list: list[int] = [0]
+    data: list[M] = None
 
-    def __init__(self, total: int, page: int, limit: int, show_all: bool = False):
+    def __init__(
+        self,
+        total: int,
+        page: int,
+        limit: int,
+        show_all: bool = False,
+        data: list[M] = None,
+    ):
         """
         attributes will be calculated automatically by inputed __init__() args
         """
@@ -68,4 +80,5 @@ class PaginationMeta(BaseModel):
                     current_page=page, amount=limit, data_count=total
                 )
             ),
+            data=data,
         )
