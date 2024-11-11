@@ -5,8 +5,6 @@ load_dotenv(find_dotenv(), override=True)
 import logging
 import sys
 from contextlib import asynccontextmanager
-from config.email import GmailEmailClient
-from config.mongodb import MongodbClient
 from dataclasses import asdict
 from datetime import datetime
 
@@ -18,15 +16,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from pytz import timezone
 from uvicorn.config import LOGGING_CONFIG
 
+from config.email import GmailEmailClient
 from config.env import Env
-from config.mongodb import getMongoDB
+from config.mongodb import MongodbClient
 from core import middlewares
 from core.exceptions import handlers as exception_handlers
 from core.exceptions.http import CustomHttpException
 from core.logging import logger, setupLogger
-from handler import auth_handler, user_handler
-from repository import user_repo
-from utils import seeder as seeder_utils, mongodb as mongodb_utils
+from handler import (auth_handler, category_handler, product_handler,
+                     user_handler)
+from repository import category_repo, product_repo, user_repo
+from utils import mongodb as mongodb_utils
+from utils import seeder as seeder_utils
 
 requests.packages.urllib3.disable_warnings()
 
@@ -64,9 +65,7 @@ async def lifespan(app: FastAPI):
     # GmailEmailClient.init()
     MongodbClient.init()
 
-
     yield
-
 
     # cleanup here
     # GmailEmailClient.close()
@@ -107,6 +106,8 @@ app.add_middleware(
 # register handlers
 app.include_router(auth_handler.AuthRouter)
 app.include_router(user_handler.UserRouter)
+app.include_router(product_handler.ProductRouter)
+app.include_router(category_handler.CategoryRouter)
 
 if __name__ == "__main__":
     # checking unused env ferm .env file
@@ -122,11 +123,18 @@ if __name__ == "__main__":
             logger.warning(f"{key} is missing from .env file")
 
     # process command line argumants (if any)
-    mongodb_ = getMongoDB()
-    user_repo_ = user_repo.UserRepo(mongo_db=mongodb_)
+    MongodbClient.init()
+    user_repo_ = user_repo.UserRepo(mongo_db=MongodbClient)
+    product_repo_ = product_repo.ProductRepo(mongo_db=MongodbClient)
+    category_repo_ = category_repo.CategoryRepo(mongo_db=MongodbClient)
     args = sys.argv
     if len(args) > 1:
-        supported_args = ["--ensure-indexes", "--seed-initial-users"]
+        supported_args = [
+            "--ensure-indexes",
+            "--seed-initial-users",
+            "--seed-initial-categories",
+            "--seed-initial-products",
+        ]
         # validate args
         for arg in args[1:]:
             if arg not in supported_args:
@@ -137,9 +145,22 @@ if __name__ == "__main__":
                 seeder_utils.seedInitialUsers(user_repo=user_repo_)
 
             elif arg == "--ensure-indexes":
-                mongodb_utils.ensureIndexes(db=mongodb_)
+                mongodb_utils.ensureIndexes(db=MongodbClient.db)
 
-    mongodb_.client.close()
+            elif arg == "--seed-initial-categories":
+                seeder_utils.seedInitialCategories(
+                    category_repo=category_repo_,
+                    user_repo=user_repo_,
+                )
+
+            elif arg == "--seed-initial-products":
+                seeder_utils.seedInitialProducts(
+                    product_repo=product_repo_,
+                    category_repo=category_repo_,
+                    user_repo=user_repo_,
+                )
+
+    MongodbClient.close()
 
     uvicorn.run(
         "main:app",
