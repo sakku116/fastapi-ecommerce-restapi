@@ -27,6 +27,10 @@ class RefreshTokenRepo:
         _return = self.user_coll.find_one_and_delete({"id": id})
         return refresh_token_model.RefreshTokenModel(**_return) if _return else None
 
+    def getLastByCreatedBy(self, created_by: str) -> Union[refresh_token_model.RefreshTokenModel, None]:
+        _return = self.user_coll.find_one({"created_by": created_by}, sort=[("created_at", -1)])
+        return refresh_token_model.RefreshTokenModel(**_return) if _return else None
+
     def deleteManyByCreatedBy(
         self, created_by: str
     ) -> int:
