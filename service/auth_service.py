@@ -60,11 +60,16 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=datetime.utcnow() + timedelta(minutes=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
         )
+
+        # remove previous refresh token
+        prev_refresh_token = self.refresh_token_repo.getLastByCreatedBy(created_by=user.id)
+        if prev_refresh_token:
+            self.refresh_token_repo.delete(id=prev_refresh_token.id)
 
         # generate refresh token
         time_now = helper.timeNowEpoch()
@@ -74,7 +79,7 @@ class AuthService:
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    datetime.utcnow() + timedelta(minutes=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -113,7 +118,7 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=datetime.utcnow() + timedelta(minutes=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
@@ -130,7 +135,7 @@ class AuthService:
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    datetime.utcnow() + timedelta(minutes=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -274,15 +279,21 @@ class AuthService:
         )
         return result
 
-    async def sendVerifyEmailOTP(self, current_user: auth_dto.CurrentUser):
+    async def sendVerifyEmailOTP(self, user_id):
+        user = self.user_repo.getById(id=user_id)
+        if not user:
+            exc = CustomHttpException(status_code=400, message="User not found")
+            logger.error(exc)
+            raise exc
+
         # check if email already verified
-        if current_user.email_verified:
+        if user.email_verified:
             exc = CustomHttpException(status_code=400, message="Email already verified")
             logger.error(exc)
             raise exc
 
         # check if any active otp exist
-        otp = self.otp_repo.getUnverifiedByCreatedBy(created_by=current_user.id)
+        otp = self.otp_repo.getUnverifiedByCreatedBy(created_by=user.id)
         if otp:
             # delete
             self.otp_repo.delete(id=otp.id)
@@ -292,14 +303,14 @@ class AuthService:
         new_otp = otp_model.OtpModel(
             id=helper.generateUUID4(),
             created_at=time_now,
-            created_by=current_user.id,
+            created_by=user.id,
             code=helper.generateRandomNumber(length=6),
         )
 
         self.otp_repo.create(data=new_otp)
 
         # check current user's email
-        if not current_user.email:
+        if not user.email:
             exc = CustomHttpException(
                 status_code=400,
                 message="User email not configured, please update your profile",
@@ -312,7 +323,7 @@ class AuthService:
             await self.email_util.send_email(
                 subject="Quickmart Email Verification",
                 body=f"Your OTP is {new_otp.code}",
-                recipient=current_user.email,
+                recipient=user.email,
             )
         except Exception as e:
             exc = CustomHttpException(
@@ -322,13 +333,22 @@ class AuthService:
             raise exc
 
     def verifyEmailOTP(
-        self, current_user: auth_dto.CurrentUser, payload: auth_rest.VerifyEmailOTPReq
+        self, user_id: str, payload: auth_rest.VerifyEmailOTPReq
     ):
         _params = {
-            "current_user.id": current_user.id,
+            "user_id": user_id,
+            "payload": asdict(payload),
         }
 
-        otp = self.otp_repo.getLatestByCreatedBy(created_by=current_user.id)
+        user = self.user_repo.getById(id=user_id)
+        if not user:
+            exc = CustomHttpException(
+                status_code=400, message="User not found", context=_params
+            )
+            logger.error(exc)
+            raise exc
+
+        otp = self.otp_repo.getLatestByCreatedBy(created_by=user.id)
         if not otp:
             exc = CustomHttpException(
                 status_code=400, message="OTP not found", context=_params
@@ -354,7 +374,7 @@ class AuthService:
         self.otp_repo.delete(id=otp.id)
 
         # update user's email verified
-        user = self.user_repo.getById(id=current_user.id)
+        user = self.user_repo.getById(id=user.id)
         if not user:
             exc = CustomHttpException(
                 status_code=404, message="User not found", context=_params
