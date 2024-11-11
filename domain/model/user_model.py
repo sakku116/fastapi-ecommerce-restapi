@@ -75,7 +75,6 @@ class PublicUserModel(BaseModel):
 
 class UserModel(MyBaseModel, PublicUserModel):
     _coll_name = "users"
-    _bucket_name: str = "users"
     _custom_indexes = [
         _MyBaseModel_Index(keys=[("username", -1)], unique=True),
         _MyBaseModel_Index(keys=[("email", -1)], unique=True),
