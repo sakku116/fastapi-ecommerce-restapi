@@ -94,3 +94,9 @@ def localizePrice(price: float, currency_code: str, language_code: str) -> str:
         return format_currency(price, currency_code, locale=locale)
     except Exception as e:
         return ""
+
+def isImage(filename: str) -> bool:
+    mimetype = getMimeType(filename)
+    if mimetype and mimetype.startswith("image"):
+        return True
+    return False
