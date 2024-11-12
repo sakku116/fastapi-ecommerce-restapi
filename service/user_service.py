@@ -1,13 +1,16 @@
-from fastapi import Depends
+from fastapi import Depends, File
 from domain.model import user_model
 from pydantic import ValidationError
 from repository import user_repo, refresh_token_repo, otp_repo
+import io
 from domain.dto import auth_dto
 from core.logging import logger
 from domain.rest import user_rest
 from core.exceptions.http import CustomHttpException
 from utils import bcrypt as bcrypt_utils
 from utils import helper
+from config.minio import getMinioClient
+from minio import Minio
 
 
 class UserService:
@@ -16,10 +19,12 @@ class UserService:
         user_repo: user_repo.UserRepo = Depends(),
         refresh_token_repo: refresh_token_repo.RefreshTokenRepo = Depends(),
         otp_repo: otp_repo.OtpRepo = Depends(),
+        minio_client: Minio = Depends(getMinioClient),
     ) -> None:
         self.user_repo = user_repo
         self.otp_repo = otp_repo
         self.refresh_token_repo = refresh_token_repo
+        self.minio_client = minio_client
 
     def getMe(self, current_user: auth_dto.CurrentUser) -> user_rest.GetMeRespData:
         return user_rest.GetMeRespData(**current_user.model_dump())
@@ -62,9 +67,7 @@ class UserService:
 
         # re-validate user
         try:
-            user.model_validate(
-                user
-            )
+            user.model_validate(user)
         except ValidationError as e:
             for error in e.errors():
                 exc = CustomHttpException(
@@ -158,3 +161,39 @@ class UserService:
         self.otp_repo.deleteManyByCreatedBy(created_by=user_id)
 
         return
+
+    def updateProfilePict(
+        self, user_id: str, payload: user_rest.UpdateProfilePictReq
+    ) -> user_rest.UpdateProfilePictRespData:
+        user = self.user_repo.getById(id=user_id)
+        if not user:
+            exc = CustomHttpException(status_code=404, message="User not found")
+            logger.error(exc)
+            raise exc
+
+        # upload
+        filename = f"{helper.generateUUID4()}-{payload.profile_picture.filename}"
+        if not self.minio_client.bucket_exists(user_model.UserModel.getBucketName()):
+            self.minio_client.make_bucket(user_model.UserModel.getBucketName())
+
+        self.minio_client.put_object(
+            bucket_name=user_model.UserModel.getBucketName(),
+            object_name=filename,
+            data=payload.profile_picture.file,
+            length=payload.profile_picture.size or 0,
+            content_type=helper.getMimeType(payload.profile_picture.filename),
+        )
+
+        # update user object
+        user.profile_picture = filename
+        user.updated_at = helper.timeNowEpoch()
+        user.updated_by = user_id
+        user = self.user_repo.update(id=user.id, data=user)
+        if not user:
+            exc = CustomHttpException(status_code=500, message="Failed to update user")
+            logger.error(exc)
+            raise exc
+
+        user.urlizeMinioFields(minio_client=self.minio_client)
+
+        return user_rest.UpdateProfilePictRespData(**user.model_dump())

@@ -44,3 +44,10 @@ class UpdateProfilePictRespData(user_model.PublicUserModel):
 @dataclass
 class CheckPasswordReq:
     password: str = Form(...)
+
+@dataclass
+class UpdateProfilePictReq:
+    profile_picture: UploadFile
+
+class UpdateProfilePictRespData(user_model.PublicUserModel):
+    pass

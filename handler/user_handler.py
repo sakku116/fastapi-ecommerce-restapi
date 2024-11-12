@@ -33,6 +33,7 @@ def update_my_profile(
     data = service.updateProfile(user_id=current_user.id, payload=payload)
     return generic_resp.RespData[user_rest.UpdateProfileRespData](data=data)
 
+
 @UserRouter.post(
     "/me/check-password",
     response_model=generic_resp.RespData,
@@ -44,6 +45,7 @@ def check_my_password(
 ):
     service.checkPassword(user_id=current_user.id, payload=payload)
     return generic_resp.RespData()
+
 
 @UserRouter.patch(
     "/me/password",
@@ -57,12 +59,24 @@ def update_my_password(
     data = service.updatePassword(user_id=current_user.id, payload=payload)
     return generic_resp.RespData[user_rest.UpdatePasswordRespData](data=data)
 
-@UserRouter.delete(
-    "/me", response_model=generic_resp.RespData
-)
+
+@UserRouter.delete("/me", response_model=generic_resp.RespData)
 def delete_my_profile(
     service: user_service.UserService = Depends(),
     current_user: auth_dto.CurrentUser = Depends(verifyToken),
 ):
     service.delete(user_id=current_user.id)
     return generic_resp.RespData()
+
+
+@UserRouter.patch(
+    "/me/profile-picture",
+    response_model=generic_resp.RespData[user_rest.UpdateProfilePictRespData],
+)
+def update_my_profile_picture(
+    payload: user_rest.UpdateProfilePictReq = Depends(),
+    service: user_service.UserService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(verifyToken),
+):
+    data = service.updateProfilePict(user_id=current_user.id, payload=payload)
+    return generic_resp.RespData[user_rest.UpdateProfilePictRespData](data=data)
