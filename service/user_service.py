@@ -171,18 +171,31 @@ class UserService:
             logger.error(exc)
             raise exc
 
+        # validate image
+        if not helper.isImage(payload.profile_picture.filename):
+            exc = CustomHttpException(
+                status_code=400,
+                message="File is not an image",
+            )
+            logger.error(exc)
+            raise exc
+
         # upload
         filename = f"{helper.generateUUID4()}-{payload.profile_picture.filename}"
-        if not self.minio_client.bucket_exists(user_model.UserModel.getBucketName()):
-            self.minio_client.make_bucket(user_model.UserModel.getBucketName())
-
-        self.minio_client.put_object(
-            bucket_name=user_model.UserModel.getBucketName(),
-            object_name=filename,
-            data=payload.profile_picture.file,
-            length=payload.profile_picture.size or 0,
-            content_type=helper.getMimeType(payload.profile_picture.filename),
-        )
+        try:
+            self.minio_client.put_object(
+                bucket_name=user_model.UserModel.getBucketName(),
+                object_name=filename,
+                data=payload.profile_picture.file,
+                length=payload.profile_picture.size or 0,
+                content_type=helper.getMimeType(payload.profile_picture.filename),
+            )
+        except Exception as e:
+            exc = CustomHttpException(
+                status_code=500, message="Failed to store image", detail=str(e)
+            )
+            logger.error(exc)
+            raise exc
 
         # update user object
         user.profile_picture = filename
