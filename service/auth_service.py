@@ -60,7 +60,7 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(minutes=Env.TOKEN_EXPIRES_HOURS),
+            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
@@ -79,7 +79,7 @@ class AuthService:
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(minutes=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -118,7 +118,7 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(minutes=Env.TOKEN_EXPIRES_HOURS),
+            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
@@ -135,7 +135,7 @@ class AuthService:
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(minutes=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
