@@ -2,6 +2,7 @@ from fastapi import Depends, APIRouter
 from core.dependencies import verifyToken
 from domain.rest import product_rest, generic_resp
 from service import product_service
+from domain.dto import auth_dto
 
 
 ProductRouter = APIRouter(
@@ -19,8 +20,9 @@ ProductRouter = APIRouter(
 def get_product_list(
     query: product_rest.GetProductListReq = Depends(),
     product_service: product_service.ProductService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(verifyToken),
 ):
-    data, count = product_service.getList(query=query)
+    data, count = product_service.getList(query=query, curr_user_id=current_user.id)
 
     paginated_data = generic_resp.PaginatedData[
         product_rest.GetProductListRespDataItem

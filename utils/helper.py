@@ -6,7 +6,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from babel import Locale
-from babel.numbers import get_currency_symbol
+from babel.numbers import get_currency_symbol, format_currency
 
 
 def parseBool(source: any) -> bool:
@@ -85,5 +85,12 @@ def isCurrencyCodeValid(currency_code: str) -> bool:
 def getMimeType(string: str) -> str:
     try:
         return mimetypes.guess_type(string)[0]
+    except Exception as e:
+        return ""
+
+def localizePrice(price: float, currency_code: str, language_code: str) -> str:
+    try:
+        locale = Locale(language_code)
+        return format_currency(price, currency_code, locale=locale)
     except Exception as e:
         return ""

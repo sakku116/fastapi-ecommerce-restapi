@@ -11,5 +11,8 @@ class GetProductListReq(BaseModel):
     page: int = 1
     limit: int = 10
 
-class GetProductListRespDataItem(product_model.ProductModel):
-    pass
+class GetProductListRespDataItem(BaseModel):
+    name: str = ""
+    price: float = 0
+    localized_price: str = ""
+    img: Optional[str] = None
