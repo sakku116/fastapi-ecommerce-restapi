@@ -149,7 +149,7 @@ def seedInitialProducts(product_repo: product_repo.ProductRepo, category_repo: c
             continue
 
         # get category
-        category = category_repo.getByName(name=(product.get("category") or "").capitalize())
+        category = category_repo.getByName(name=product.get("category"))
         if not category:
             logger.warning(f"category not found: {product.get('category')}")
 
