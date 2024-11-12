@@ -19,6 +19,7 @@ from uvicorn.config import LOGGING_CONFIG
 from config.email import GmailEmailClient
 from config.env import Env
 from config.mongodb import MongodbClient
+from config.minio import getMinioClient
 from core import middlewares
 from core.exceptions import handlers as exception_handlers
 from core.exceptions.http import CustomHttpException
@@ -28,6 +29,7 @@ from handler import (auth_handler, category_handler, product_handler,
 from repository import category_repo, product_repo, user_repo
 from utils import mongodb as mongodb_utils
 from utils import seeder as seeder_utils
+from utils import minio as minio_utils
 
 requests.packages.urllib3.disable_warnings()
 
@@ -124,6 +126,7 @@ if __name__ == "__main__":
 
     # process command line argumants (if any)
     MongodbClient.init()
+    minio_client = getMinioClient()
     user_repo_ = user_repo.UserRepo(mongo_db=MongodbClient)
     product_repo_ = product_repo.ProductRepo(mongo_db=MongodbClient)
     category_repo_ = category_repo.CategoryRepo(mongo_db=MongodbClient)
@@ -131,6 +134,7 @@ if __name__ == "__main__":
     if len(args) > 1:
         supported_args = [
             "--ensure-indexes",
+            "--ensure-buckets",
             "--seed-initial-users",
             "--seed-initial-categories",
             "--seed-initial-products",
@@ -146,6 +150,9 @@ if __name__ == "__main__":
 
             elif arg == "--ensure-indexes":
                 mongodb_utils.ensureIndexes(db=MongodbClient.db)
+
+            elif arg == "--ensure-buckets":
+                minio_utils.ensureBuckets(minio=minio_client)
 
             elif arg == "--seed-initial-categories":
                 seeder_utils.seedInitialCategories(
