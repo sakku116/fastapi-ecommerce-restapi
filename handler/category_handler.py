@@ -35,6 +35,7 @@ def get_product_list(
 
 @CategoryRouter.post(
     "",
+    tags=["Admin Only"],
     description="admin only",
     response_model=generic_resp.RespData[category_rest.CreateCategoryRespData],
 )
