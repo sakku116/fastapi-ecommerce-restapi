@@ -14,7 +14,7 @@ class CategoryRepo:
 
     def create(
         self, category: category_model.CategoryModel
-    ) -> category_model.CategoryModel:
+    ):
         self.category_coll.insert_one(category.model_dump())
 
     def getById(

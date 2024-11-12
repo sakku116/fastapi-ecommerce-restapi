@@ -1,6 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from domain.model import category_model
 from typing import Optional, Literal
+from fastapi import UploadFile, Form, File
+from dataclasses import dataclass
+
 
 class GetCategoryListReq(BaseModel):
     query: Optional[str] = None
@@ -11,4 +14,18 @@ class GetCategoryListReq(BaseModel):
     limit: int = 10
 
 class GetCategoryListRespDataItem(category_model.CategoryModel):
+    pass
+
+@dataclass
+class CreateCategoryReq:
+    name: str = Form()
+    description: Optional[str] = Form(None)
+    img: Optional[UploadFile] = UploadFile(...)
+
+    @model_validator(mode="before")
+    def test(self):
+        print(self)
+        return self
+
+class CreateCategoryRespData(category_model.CategoryModel):
     pass

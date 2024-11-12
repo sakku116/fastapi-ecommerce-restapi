@@ -1,7 +1,8 @@
 from fastapi import Depends, APIRouter
-from core.dependencies import verifyToken
+from core.dependencies import verifyToken, adminOnly
 from domain.rest import category_rest, generic_resp
 from service import category_service
+from domain.dto import auth_dto
 
 
 CategoryRouter = APIRouter(
@@ -30,3 +31,22 @@ def get_product_list(
     return generic_resp.RespData[
         generic_resp.PaginatedData[category_rest.GetCategoryListRespDataItem]
     ](data=paginated_data)
+
+
+@CategoryRouter.post(
+    "",
+    description="admin only",
+    response_model=generic_resp.RespData[category_rest.CreateCategoryRespData],
+)
+def create_category(
+    payload: category_rest.CreateCategoryReq = Depends(),
+    category_service: category_service.CategoryService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(adminOnly),
+):
+    data = category_service.createCategory(
+        payload=payload, curr_user_id=current_user.id
+    )
+
+    resp = generic_resp.RespData[category_rest.CreateCategoryRespData](data=data)
+    resp.meta.message = "Category created successfully"
+    return resp
