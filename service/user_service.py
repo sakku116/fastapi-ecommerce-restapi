@@ -47,6 +47,14 @@ class UserService:
             user.username = payload.username
 
         if payload.email != None:
+            # check if email already registered
+            if self.user_repo.getByEmail(email=payload.email):
+                exc = CustomHttpException(
+                    status_code=400, message="Email already registered"
+                )
+                logger.error(exc)
+                raise exc
+
             user.email = payload.email
             user.email_verified = False
 
@@ -67,8 +75,9 @@ class UserService:
 
         # re-validate user
         try:
-            user.model_validate(user)
+            user.model_validate(user.model_dump())
         except ValidationError as e:
+            logger.debug(f"validation error")
             for error in e.errors():
                 exc = CustomHttpException(
                     status_code=400,
@@ -77,6 +86,12 @@ class UserService:
                 )
                 logger.error(exc)
                 raise exc
+        except Exception as e:
+            exc = CustomHttpException(
+                status_code=500, message="Failed to validate user"
+            )
+            logger.error(exc)
+            raise exc
 
         # update user
         user.updated_at = helper.timeNowEpoch()
