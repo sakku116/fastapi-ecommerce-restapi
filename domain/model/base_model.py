@@ -5,7 +5,9 @@ from typing import Literal
 from bson.int64 import Int64
 from minio import Minio
 from pydantic import BaseModel, PrivateAttr
+from typing import Optional
 from pydantic.fields import ModelPrivateAttr
+from utils import helper
 
 from core.logging import logger
 
@@ -19,46 +21,29 @@ class _MyBaseModel_Index(BaseModel):
     unique: bool = False
 
 
-class MyBaseModel(BaseModel):
-    """
-    id field already indexed by default, but it need to be indexed manually if you set the _indexes field.
-    """
-
-    _coll_name: ModelPrivateAttr = PrivateAttr("")
-
-    _default_indexes: list[_MyBaseModel_Index] = [
-        _MyBaseModel_Index(keys=[("id", 1)], unique=True)
-    ]
-    _custom_indexes: list[_MyBaseModel_Index] = []
-
-    _default_int64_fields: list[str] = ["created_at", "updated_at"]
-    _custom_int64_fields: list[str] = []
-
+class MinioUtil(BaseModel):
     _bucket_name: ModelPrivateAttr = PrivateAttr("")
-    _minio_fields: list[str] = []
+    _minio_fields: ModelPrivateAttr = PrivateAttr([])
 
-    id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
-    created_by: str = ""
-    updated_by: str = ""
+    @classmethod
+    def getBucketName(cls) -> str:
+        return cls._bucket_name.get_default()
 
-    def model_dump(self, **kwargs) -> dict:
-        data = super().model_dump(**kwargs)
-        for field in self._custom_int64_fields + self._default_int64_fields:
-            if field in data:
-                data[field] = Int64(data[field])
-        return data
+    @classmethod
+    def getMinioFields(cls) -> list[str]:
+        return cls._minio_fields.get_default()
 
     def urlizeMinioFields(
         self, minio_client: Minio, mode: Literal["download", "view"] = "view"
     ):
         if not self._bucket_name or not self._minio_fields:
-            logger.warning(f"urlizeMinioFields: skip. _bucket_name: {self._bucket_name}, _minio_fields: {self._minio_fields}")
+            logger.warning(
+                f"urlizeMinioFields: skip. self._bucket_name: {self._bucket_name}, self._minio_fields: {self._minio_fields}"
+            )
 
         else:
             for field in self._minio_fields:
-                if field in self.model_dump():
+                if getattr(self, field, None):
                     try:
                         setattr(
                             self,
@@ -84,13 +69,37 @@ class MyBaseModel(BaseModel):
 
         return self
 
+class MyBaseModel(MinioUtil):
+    """
+    id field already indexed by default, but it need to be indexed manually if you set the _indexes field.
+    """
+
+    _coll_name: ModelPrivateAttr = PrivateAttr("")
+
+    _default_indexes: list[_MyBaseModel_Index] = [
+        _MyBaseModel_Index(keys=[("id", 1)], unique=True)
+    ]
+    _custom_indexes: list[_MyBaseModel_Index] = []
+
+    _default_int64_fields: list[str] = ["created_at", "updated_at"]
+    _custom_int64_fields: list[str] = []
+
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
+    def model_dump(self, **kwargs) -> dict:
+        data = super().model_dump(**kwargs)
+        for field in self._custom_int64_fields + self._default_int64_fields:
+            if field in data:
+                data[field] = Int64(data[field])
+        return data
+
     @classmethod
     def getCollName(cls) -> str:
         return cls._coll_name.get_default()
-
-    @classmethod
-    def getBucketName(cls) -> str:
-        return cls._bucket_name.get_default()
 
     @classmethod
     def getDefaultIndexes(cls):

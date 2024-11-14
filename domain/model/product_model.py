@@ -17,6 +17,8 @@ class ProductModel_Dimensions(BaseModel):
 
 class ProductModel(MyBaseModel):
     _coll_name = "products"
+    _bucket_name = "products"
+    _minio_fields = ["img"]
 
     category_id: Optional[str] = None
 

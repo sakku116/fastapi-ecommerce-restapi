@@ -1,4 +1,4 @@
-from .base_model import MyBaseModel, _MyBaseModel_Index
+from .base_model import MyBaseModel, _MyBaseModel_Index, MinioUtil
 from pydantic import field_validator, ValidationError
 from typing import Literal, Optional
 from datetime import datetime
@@ -10,7 +10,10 @@ USER_GENDER_ENUMS_DEFAULT = "male"
 USER_ROLE_ENUMS = Literal["seller", "customer", "admin"]
 USER_ROLE_ENUMS_DEFAULT = "customer"
 
-class PublicUserModel(BaseModel):
+class PublicUserModel(MinioUtil):
+    _bucket_name = "users"
+    _minio_fields = ["profile_picture"]
+
     id: str
     role: Literal[USER_ROLE_ENUMS] = USER_GENDER_ENUMS_DEFAULT
     fullname: str = ""
@@ -75,8 +78,6 @@ class PublicUserModel(BaseModel):
 
 class UserModel(MyBaseModel, PublicUserModel):
     _coll_name = "users"
-    _bucket_name = "users"
-    _minio_fields = ["profile_picture"]
     _custom_indexes = [
         _MyBaseModel_Index(keys=[("username", -1)], unique=True),
         _MyBaseModel_Index(keys=[("email", -1)], unique=True),
