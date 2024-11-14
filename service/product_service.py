@@ -44,13 +44,23 @@ class ProductService:
             skip=helper.generateSkip(query.page, query.limit),
             limit=query.limit,
             do_count=True,
+            lookup_variants=True,
         )
 
         result = []
         for product in products:
             res_item = product_rest.GetProductListRespDataItem(
-                id=product.id, name=product.name, price=product.price, img=product.img
+                id=product.id, name=product.name
             )
+
+            # use default variant
+            first_variant = product.variants_[0] if product.variants_ else None
+            if first_variant:
+                res_item.price = first_variant.price
+                res_item.image = (
+                    first_variant.image or product.images[0] if product.images else None
+                )
+
             res_item.asResponse(
                 minio_client=self.minio_client,
                 language_code=current_user.language,
@@ -81,11 +91,25 @@ class ProductService:
             logger.error(exc)
             raise exc
 
+        existing_product.urlizeMinioFields(minio_client=self.minio_client)
         result = product_rest.GetProductDetailRespData(**existing_product.model_dump())
-        result.asResponse(
-            minio_client=self.minio_client,
-            language_code=current_user.language,
-            currency_code=current_user.currency,
-        )
+
+        # get product variants
+        variants = self.product_repo.getProductVariants(product_id=product_id)
+        for variant in variants:
+            # urlize minio fields
+            variant.urlizeMinioFields(minio_client=self.minio_client)
+
+            variant_res_item = product_rest.GetProductDetailRespData__VariantsItem(
+                **variant.model_dump()
+            )
+
+            # localize price
+            if variant.price:
+                variant_res_item.localized_price = helper.localizePrice(
+                    variant.price, current_user.currency, current_user.language
+                )
+
+            result.variants.append(variant_res_item)
 
         return result

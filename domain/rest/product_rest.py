@@ -5,14 +5,14 @@ from minio import Minio
 from utils import helper
 
 
-class BaseProductResp(base_model.MinioUtil):
+class BaseProductSummaryResp(base_model.MinioUtil):
     _bucket_name = product_model.ProductModel.getBucketName()
     _minio_fields = product_model.ProductModel.getMinioFields()
     id: str = ""
     name: str = ""
     price: float = 0
     localized_price: str = ""
-    img: Optional[str] = None
+    image: Optional[str] = None
 
     def asResponse(
         self,
@@ -27,7 +27,7 @@ class BaseProductResp(base_model.MinioUtil):
 
         if self.price and currency_code and language_code:
             self.localized_price = helper.localizePrice(self.price, currency_code, language_code)
-        if self.img:
+        if self.image:
             self.urlizeMinioFields(minio_client=minio_client)
 
 
@@ -43,9 +43,11 @@ class GetProductListReq(BaseModel):
     limit: int = 10
 
 
-class GetProductListRespDataItem(BaseProductResp):
+class GetProductListRespDataItem(BaseProductSummaryResp):
     pass
 
+class GetProductDetailRespData__VariantsItem(product_model.ProductVariantModel):
+    localized_price: str = ""
 
-class GetProductDetailRespData(product_model.ProductModel, BaseProductResp):
-    pass
+class GetProductDetailRespData(product_model.ProductModel):
+    variants: list[GetProductDetailRespData__VariantsItem] = []

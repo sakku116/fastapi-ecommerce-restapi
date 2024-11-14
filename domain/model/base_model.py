@@ -1,15 +1,14 @@
 import mimetypes
 from datetime import timedelta
-from typing import Literal
+from typing import Literal, Optional, Union
 
 from bson.int64 import Int64
 from minio import Minio
 from pydantic import BaseModel, PrivateAttr
-from typing import Optional
 from pydantic.fields import ModelPrivateAttr
-from utils import helper
 
 from core.logging import logger
+from utils import helper
 
 
 class _MyBaseModel_Index(BaseModel):
@@ -42,30 +41,57 @@ class MinioUtil(BaseModel):
             )
 
         else:
-            for field in self._minio_fields:
-                if getattr(self, field, None):
-                    try:
-                        setattr(
-                            self,
-                            field,
-                            minio_client.presigned_get_object(
+            for field_name in self._minio_fields:
+                if getattr(self, field_name, None):
+                    raw_value: Union[list[str], str] = getattr(self, field_name, None)
+
+                    if raw_value:
+                        value: Union[list[str], str, None] = None
+
+                        if isinstance(raw_value, list):
+                            value = [
+                                minio_client.presigned_get_object(
+                                    bucket_name=self._bucket_name,
+                                    object_name=getattr(self, item),
+                                    expires=timedelta(days=1),
+                                    response_headers=(
+                                        {
+                                            "response-content-disposition": "inline",
+                                            "response-content-type": mimetypes.guess_type(
+                                                getattr(self, item)
+                                            )[
+                                                0
+                                            ],
+                                        }
+                                        if mode == "view"
+                                        else None
+                                    ),
+                                )
+                                for item in raw_value
+                            ]
+
+                        elif isinstance(raw_value, str):
+                            value = minio_client.presigned_get_object(
                                 bucket_name=self._bucket_name,
-                                object_name=getattr(self, field),
+                                object_name=raw_value,
                                 expires=timedelta(days=1),
                                 response_headers=(
                                     {
                                         "response-content-disposition": "inline",
                                         "response-content-type": mimetypes.guess_type(
-                                            getattr(self, field)
+                                            raw_value
                                         )[0],
                                     }
                                     if mode == "view"
                                     else None
                                 ),
-                            ),
-                        )
-                    except Exception as e:
-                        logger.warning(e)
+                            )
+
+                        if value:
+                            try:
+                                setattr(self, field_name, value)
+                            except Exception as e:
+                                logger.warning(e)
 
         return self
 

@@ -18,18 +18,36 @@ class ProductModel_Dimensions(BaseModel):
 class ProductModel(MyBaseModel):
     _coll_name = "products"
     _bucket_name = "products"
-    _minio_fields = ["img"]
+    _minio_fields = ["images"]
 
     category_id: Optional[str] = None
 
-    sku: str
     name: str
-    stock: int
-    price: float  # dollar
-    tags: list[str] = []
-    description: Optional[str] = None
-    discount_percentage: Optional[float] = None
     brand: Optional[str] = None
+    description: Optional[str] = None
+    tags: list[str] = []
+    images: Optional[list[str]] = None  # filenames
+
+class ProductVariantModel(MyBaseModel):
+    """
+    product must be at least has one variant for default
+    """
+
+    _coll_name = "product_variants"
+    _bucket_name = "products"
+    _minio_fields = ["image"]
+
+    is_main: bool = False
+    product_id: str
+    image: Optional[str] = None  # filename
+    sku: str
+    price: float # dollar
+    discount_percentage: Optional[float] = None
     weight: Optional[float] = None
     dimensions: Optional[ProductModel_Dimensions] = None
-    img: Optional[str] = None  # filename
+    stock: int
+
+    # variant type (all empty means default)
+    size: Optional[int] = None
+    model: Optional[str] = None
+    color: Optional[str] = None

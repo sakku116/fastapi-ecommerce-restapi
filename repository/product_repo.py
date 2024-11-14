@@ -11,9 +11,15 @@ from utils import helper
 class ProductRepo:
     def __init__(self, mongo_db: MongodbClient = Depends()):
         self.product_coll = mongo_db.db[product_model.ProductModel.getCollName()]
+        self.product_variant_coll = mongo_db.db[
+            product_model.ProductVariantModel.getCollName()
+        ]
 
     def create(self, product: product_model.ProductModel) -> product_model.ProductModel:
         self.product_coll.insert_one(product.model_dump())
+
+    def createVariant(self, product_variant: product_model.ProductVariantModel):
+        self.product_variant_coll.insert_one(product_variant.model_dump())
 
     def getById(self, id: str) -> Union[product_model.ProductModel, None]:
         product = self.product_coll.find_one({"id": id})
@@ -21,15 +27,18 @@ class ProductRepo:
             return None
         return product_model.ProductModel(**product) if product else None
 
-    def get(
-        self, sku: str = None, name: str = None
-    ) -> Union[product_model.ProductModel, None]:
-        if [sku, name].count(None) == 2:
-            return ValueError("parameters needed")
+    def getProductVariants(
+        self, product_id: str
+    ) -> list[product_model.ProductVariantModel]:
+        variants = self.product_variant_coll.find({"product_id": product_id}).sort(
+            "is_main", -1
+        )
+        return [product_model.ProductVariantModel(**variant) for variant in variants]
 
+    def getByName(
+        self, name: str
+    ) -> Union[product_model.ProductModel, None]:
         filter = {}
-        if sku != None:
-            filter["sku"] = sku
         if name != None:
             filter["name"] = name
         product = self.product_coll.find_one(filter)
@@ -68,6 +77,7 @@ class ProductRepo:
         ] = product_model.SORTABLE_FIELDS_ENUMS_DEF,
         sort_order: Literal[-1, 1] = -1,
         do_count: bool = False,
+        lookup_variants: bool = True,  # sorted by is_main:1
     ) -> tuple[list[product_dto.GetProductListResItem], int]:
         pipeline = []
         match1 = {}
@@ -102,6 +112,24 @@ class ProductRepo:
 
         if limit != None:
             facet__paginated_results.append({"$limit": limit})
+
+        if lookup_variants:
+            facet__paginated_results.extend(
+                [
+                    {
+                        "$lookup": {
+                            "from": self.product_variant_coll.name,
+                            "localField": "id",
+                            "foreignField": "product_id",
+                            "as": "variants_",
+                            "pipeline": [
+                                {"$sort": {"is_main": -1}},
+                                {"$project": {"_id": 0}},
+                            ],
+                        }
+                    }
+                ]
+            )
 
         facet["paginated_results"] = facet__paginated_results
 

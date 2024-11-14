@@ -7,6 +7,7 @@ import requests
 from core.logging import logger
 from utils import helper
 
+
 def seedInitialUsers(user_repo: user_repo.UserRepo):
     logger.info("Seeding initial users")
 
@@ -53,19 +54,26 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
 
     for user in users:
         logger.info(f"Seeding initial user: {user.username}")
-        existing = user_repo.getByUsername(user.username) or user_repo.getByEmail(user.email) or None
+        existing = (
+            user_repo.getByUsername(user.username)
+            or user_repo.getByEmail(user.email)
+            or None
+        )
         if existing:
             logger.warning(f"User @{user.username} ({user.email}) already exists")
             continue
 
         user_repo.create(user)
 
-def seedInitialCategories(category_repo: category_repo.CategoryRepo, user_repo: user_repo.UserRepo):
+
+def seedInitialCategories(
+    category_repo: category_repo.CategoryRepo, user_repo: user_repo.UserRepo
+):
     logger.info("Seeding initial categories")
 
     # get dummy categories
     try:
-        url = 'https://dummyjson.com/products/categories'
+        url = "https://dummyjson.com/products/categories"
         response = requests.get(url, verify=False)
         response.raise_for_status()
     except Exception as e:
@@ -87,11 +95,13 @@ def seedInitialCategories(category_repo: category_repo.CategoryRepo, user_repo: 
     admin_user = user_repo.getByUsername(username=Env.INITIAL_ADMIN_USER_USERNAME)
     if not admin_user:
         logger.error(f"Admin user not found: {Env.INITIAL_ADMIN_USER_USERNAME}")
-        raise NotImplementedError(f"Admin user not found: {Env.INITIAL_ADMIN_USER_USERNAME}")
+        raise NotImplementedError(
+            f"Admin user not found: {Env.INITIAL_ADMIN_USER_USERNAME}"
+        )
 
     time_now = helper.timeNowEpoch()
     for category in raw_categories:
-        if 'name' not in category:
+        if "name" not in category:
             logger.warning(f"raw category doesnt have name: {category}")
             continue
 
@@ -109,12 +119,17 @@ def seedInitialCategories(category_repo: category_repo.CategoryRepo, user_repo: 
         category_repo.create(category=new_category)
         logger.info(f"initial category created: {new_category.name}")
 
-def seedInitialProducts(product_repo: product_repo.ProductRepo, category_repo: category_repo.CategoryRepo, user_repo: user_repo.UserRepo):
+
+def seedInitialProducts(
+    product_repo: product_repo.ProductRepo,
+    category_repo: category_repo.CategoryRepo,
+    user_repo: user_repo.UserRepo,
+):
     logger.info(f"Seeding initial products")
 
     # get dummy products
     try:
-        url = 'https://dummyjson.com/products'
+        url = "https://dummyjson.com/products"
         response = requests.get(url, verify=False)
         response.raise_for_status()
     except Exception as e:
@@ -135,16 +150,18 @@ def seedInitialProducts(product_repo: product_repo.ProductRepo, category_repo: c
     seller_user = user_repo.getByUsername(username=Env.INITIAL_SELLER_USER_USERNAME)
     if not seller_user:
         logger.error(f"Seller user not found: {Env.INITIAL_SELLER_USER_USERNAME}")
-        raise NotImplementedError(f"Seller user not found: {Env.INITIAL_SELLER_USER_USERNAME}")
+        raise NotImplementedError(
+            f"Seller user not found: {Env.INITIAL_SELLER_USER_USERNAME}"
+        )
 
-    products: list[dict] = raw_products.get('products') or []
+    products: list[dict] = raw_products.get("products") or []
     time_now = helper.timeNowEpoch()
     for product in products:
-        if not product.get('title') and not product.get('sku'):
+        if not product.get("title") and not product.get("sku"):
             logger.warning(f"raw product doesnt have title or sku: {product}")
             continue
 
-        if product_repo.get(sku=product.get("sku"), name=product.get("title")):
+        if product_repo.getByName(name=product.get("title")):
             logger.warning(f"product already exists: {product.get('title')}")
             continue
 
@@ -157,22 +174,31 @@ def seedInitialProducts(product_repo: product_repo.ProductRepo, category_repo: c
             id=helper.generateUUID4(),
             created_at=time_now,
             created_by=seller_user.id,
-            sku=product.get("sku") or "",
+            category_id=category.id if category else None,
             name=product.get("title") or "",
+            brand=product.get("brand") or "",
+            description=product.get("description") or "",
+            tags=product.get("tags") or [],
+        )
+
+        new_product_variant = product_model.ProductVariantModel(
+            id=helper.generateUUID4(),
+            created_at=time_now,
+            created_by=seller_user.id,
+            is_main=True,
+            product_id=new_product.id,
+            sku=product.get("sku") or "",
             stock=product.get("stock") or 0,
             price=product.get("price") or 0,
-            tags=product.get("tags") or [],
-            description=product.get("description") or "",
-            category_id=category.id if category else None,
             discount_percentage=product.get("discountPercentage") or None,
-            brand=product.get("brand") or "",
             weight=product.get("weight") or 0,
             dimensions=product_model.ProductModel_Dimensions(
                 height=product.get("dimensions", {}).get("height") or 0,
                 width=product.get("dimensions", {}).get("width") or 0,
                 depth=product.get("dimensions", {}).get("depth") or 0,
-            )
+            ),
         )
 
         product_repo.create(product=new_product)
+        product_repo.createVariant(product_variant=new_product_variant)
         logger.info(f"initial product created: {new_product.name}")
