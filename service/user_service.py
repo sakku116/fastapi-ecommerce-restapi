@@ -27,7 +27,9 @@ class UserService:
         self.minio_client = minio_client
 
     def getMe(self, current_user: auth_dto.CurrentUser) -> user_rest.GetMeRespData:
-        return user_rest.GetMeRespData(**current_user.model_dump())
+        result = user_rest.GetMeRespData(**current_user.model_dump())
+        result.urlizeMinioFields(self.minio_client)
+        return result
 
     def updateProfile(
         self, user_id: str, payload: user_rest.UpdateProfileReq
@@ -103,6 +105,7 @@ class UserService:
             logger.error(exc)
             raise exc
 
+        user.urlizeMinioFields(self.minio_client)
         return user_rest.UpdateProfileRespData(**user.model_dump())
 
     def checkPassword(self, user_id: str, payload: user_rest.CheckPasswordReq) -> bool:
@@ -159,6 +162,7 @@ class UserService:
         user.password = bcrypt_utils.hashPassword(payload.new_password)
         self.user_repo.update(id=user.id, data=user)
 
+        user.urlizeMinioFields(self.minio_client)
         return user_rest.UpdatePasswordRespData(**user.model_dump())
 
     def delete(self, user_id: str):
@@ -197,6 +201,7 @@ class UserService:
 
         # upload
         filename = f"{helper.generateUUID4()}-{payload.profile_picture.filename}"
+        logger.debug(user_model.UserModel.getBucketName())
         try:
             self.minio_client.put_object(
                 bucket_name=user_model.UserModel.getBucketName(),
@@ -223,5 +228,4 @@ class UserService:
             raise exc
 
         user.urlizeMinioFields(minio_client=self.minio_client)
-
         return user_rest.UpdateProfilePictRespData(**user.model_dump())
