@@ -15,11 +15,11 @@ class ProductRepo:
     def create(self, product: product_model.ProductModel) -> product_model.ProductModel:
         self.product_coll.insert_one(product.model_dump())
 
-    def getById(self, product_id: str) -> Union[product_model.ProductModel, None]:
-        product = self.product_coll.find_one({"id": product_id})
+    def getById(self, id: str) -> Union[product_model.ProductModel, None]:
+        product = self.product_coll.find_one({"id": id})
         if not product:
             return None
-        return product_model.ProductModel(**product)
+        return product_model.ProductModel(**product) if product else None
 
     def get(
         self, sku: str = None, name: str = None

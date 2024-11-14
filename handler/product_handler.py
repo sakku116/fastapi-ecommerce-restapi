@@ -11,6 +11,7 @@ ProductRouter = APIRouter(
     dependencies=[Depends(verifyToken)],
 )
 
+
 @ProductRouter.get(
     "",
     response_model=generic_resp.RespData[
@@ -31,3 +32,19 @@ def get_product_list(
     return generic_resp.RespData[
         generic_resp.PaginatedData[product_rest.GetProductListRespDataItem]
     ](data=paginated_data)
+
+
+@ProductRouter.get(
+    "/{product_id}",
+    response_model=generic_resp.RespData[product_rest.GetProductDetailRespData],
+)
+def get_product_detail(
+    product_id: str,
+    product_service: product_service.ProductService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(verifyToken),
+):
+    product = product_service.getProductDetail(
+        product_id=product_id, curr_user_id=current_user.id
+    )
+
+    return generic_resp.RespData[product_rest.GetProductDetailRespData](data=product)
