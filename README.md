@@ -82,3 +82,98 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
         - `INITIAL_ADMIN_USER_PASSWORD`
     - `--seed-initial-categories`: Seeds the database with initial product categories.
     - `--seed-initial-products`: Seeds the database with initial products and product variants.
+
+## **Model**: MyBaseModel
+The `MyBaseModel` class is a base model that provides essential fields and functionality for other models. It includes private attributes, indexes, and support for tracking creation and update timestamps.
+
+```python
+class MyBaseModel(MinioUtil):
+    _coll_name: ModelPrivateAttr = PrivateAttr("")
+
+    _default_indexes: list[_MyBaseModel_Index] = [
+        _MyBaseModel_Index(keys=[("id", 1)], unique=True)
+    ]
+    _custom_indexes: list[_MyBaseModel_Index] = []
+
+    _default_int64_fields: list[str] = ["created_at", "updated_at"]
+    _custom_int64_fields: list[str] = []
+
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
+    def model_dump(self, **kwargs) -> dict:
+        data = super().model_dump(**kwargs)
+        for field in self._custom_int64_fields + self._default_int64_fields:
+            if field in data:
+                data[field] = Int64(data[field])
+        return data
+
+    @classmethod
+    def getCollName(cls) -> str:
+        return cls._coll_name.get_default()
+
+    @classmethod
+    def getDefaultIndexes(cls):
+        return cls._default_indexes.get_default()
+
+    @classmethod
+    def getCustomIndexes(cls):
+        return cls._custom_indexes.get_default()
+
+    @classmethod
+    def getDefaultInt64Fields(cls):
+        return cls._default_int64_fields.get_default()
+
+    @classmethod
+    def getCustomInt64Fields(cls):
+        return cls._custom_int64_fields.get_default()
+```
+
+### Private Attribute: _coll_name
+The `_coll_name` attribute is a private attribute of type ModelPrivateAttr. It is used to define the collection name for models that inherit from MyBaseModel. This is primarily for internal use and ensures that each model has its corresponding collection name in MongoDB.
+
+```python
+class MyBaseModel(MinioUtil):
+    _coll_name: ModelPrivateAttr = PrivateAttr("")
+```
+
+### Default and Custom Indexes
+The `MyBaseModel` class defines default indexes for MongoDB collections, as well as custom indexes. Indexes will be ensured via `--ensure-indexes` argument when running the app. By default, it ensures a unique index on the id field:
+
+```python
+_default_indexes: list[_MyBaseModel_Index] = [
+    _MyBaseModel_Index(keys=[("id", 1)], unique=True)
+]
+_custom_indexes: list[_MyBaseModel_Index] = []
+```
+
+### Default and Custom int64 Fields
+This model also includes default fields like created_at and updated_at, which are typically represented as int64 for timestamp storage. You can define custom int64 fields as needed. The defined fields will be converted to `bson.int64.Int64` when `model_dump()` called:
+
+```python
+_default_int64_fields: list[str] = ["created_at", "updated_at"]
+_custom_int64_fields: list[str] = []
+```
+
+### Default Model Fields
+The model includes the following default fields:
+```python
+id: A unique identifier for the model.
+created_at: A timestamp for when the document was created.
+updated_at: A timestamp for when the document was last updated.
+created_by: The user who created the document.
+updated_by: The user who last updated the document.
+```
+
+### Minio Utility in MyBaseModel
+`MyBaseModel` inherits from the `MinioUtil` class to take advantage of the utility functions that assist with file handlign and MinIO storage. The MinioUtil class adds several important features:
+
+1. `_bucket_name`: This private attribute defines the name of the MinIO bucket that will be used for storing files related to the model. The bucket name can be created or ensured using the `--ensure-buckets` argument when running the app. This ensures that the bucket exists before storing files.
+
+2. `_minio_fields`: This private attribute is a list of fields in the model user defined that are used to store file names.
+
+
+3. `urlizeMinioFields`: This method is used to transform any fields defined in `_minio_fields` into full URLs pointing to the corresponding files in the MinIO storage. This allows easy access to files by their URLs.
