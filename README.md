@@ -38,8 +38,8 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 1. **Clone the repository**:
 
     ```bash
-    git clone https://github.com/your-username/ecommerce-rest-api.git
-    cd ecommerce-rest-api
+    git clone https://github.com/sakku116/fastapi-ecommerce-restapi.git
+    cd fastapi-ecommerce-restapi
     ```
 
 2. **Install dependencies**:
