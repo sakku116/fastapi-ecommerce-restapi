@@ -54,7 +54,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 
     Create a `.env` file. see [config/env.py](./config/env.py) file for env variable examples.
 
-4. **Run the Application**:
+4. **Run the application**:
 
     ```bash
     python main.py
@@ -62,7 +62,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 
     The API will be accessible at `http://localhost:8000`.
 
-5. **Run the Application With Specific Options**
+5. **Run the application with specific options**:
 
     To run the app with specific options, you can use the following command-line arguments:
 
