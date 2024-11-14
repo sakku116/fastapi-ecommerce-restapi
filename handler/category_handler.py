@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter
-from core.dependencies import verifyToken, adminOnly
+from core.dependencies import verifyToken, RoleRequired
 from domain.rest import category_rest, generic_resp
 from service import category_service
 from domain.dto import auth_dto
@@ -42,7 +42,7 @@ def get_product_list(
 def create_category(
     payload: category_rest.CreateCategoryReq = Depends(),
     category_service: category_service.CategoryService = Depends(),
-    current_user: auth_dto.CurrentUser = Depends(adminOnly),
+    current_user: auth_dto.CurrentUser = Depends(RoleRequired(role=["admin"])),
 ):
     data = category_service.createCategory(
         payload=payload, curr_user_id=current_user.id

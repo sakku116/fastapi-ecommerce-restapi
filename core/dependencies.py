@@ -7,10 +7,11 @@ from fastapi import Request
 from config.env import Env
 from utils import helper
 import json
-from typing import Optional
+from typing import Optional, Literal
 from core.logging import logger
 from domain.dto import auth_dto
 from core.exceptions.http import CustomHttpException
+from domain.model import user_model
 
 reusable_token = OAuth2PasswordBearer("/auth/login")
 
@@ -22,13 +23,14 @@ async def verifyToken(
     current_user = auth_service.verifyToken(token=token)
     return current_user
 
+class RoleRequired:
+    def __init__(self, role: list[Literal[user_model.USER_ROLE_ENUMS]]):
+        self.role = role
 
-async def adminOnly(
-    current_user: auth_dto.CurrentUser = Depends(verifyToken),
-) -> auth_dto.CurrentUser:
-    if current_user.role != "admin":
-        exc = CustomHttpException(status_code=401, message="Unauthorized")
-        logger.error(exc)
-        raise exc
+    def __call__(self, current_user: auth_dto.CurrentUser = Depends(verifyToken)):
+        if current_user.role not in self.role:
+            exc = CustomHttpException(status_code=401, message="Unauthorized")
+            logger.error(exc)
+            raise exc
 
-    return current_user
+        return current_user
