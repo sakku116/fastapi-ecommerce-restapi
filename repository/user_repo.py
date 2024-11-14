@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union, Literal
 
 from fastapi import Depends
 from pymongo import ReturnDocument
-
+from core.logging import logger
 from config.mongodb import MongodbClient
 from domain.model import user_model
 
@@ -58,6 +58,10 @@ class UserRepo:
     def getByUsername(self, username: str) -> Union[user_model.UserModel, None]:
         _return = self.user_coll.find_one({"username": username})
         return user_model.UserModel(**_return) if _return else None
+
+    def getAllByRole(self, role: Literal[user_model.USER_ROLE_ENUMS]) -> list[user_model.UserModel]:
+        _return = self.user_coll.find({"role": role})
+        return [user_model.UserModel(**user) for user in _return]
 
     def getByEmail(self, email: str) -> Union[user_model.UserModel, None]:
         _return = self.user_coll.find_one({"email": email})

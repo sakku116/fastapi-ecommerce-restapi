@@ -1,6 +1,6 @@
 from config.mongodb import getMongoDB
-from domain.model import user_model, product_model, category_model
-from repository import user_repo, product_repo, category_repo
+from domain.model import user_model, product_model, category_model, review_model
+from repository import user_repo, product_repo, category_repo, review_repo
 from utils import bcrypt as bcrypt_utils
 from config.env import Env
 import requests
@@ -105,7 +105,7 @@ def seedInitialCategories(
             logger.warning(f"raw category doesnt have name: {category}")
             continue
 
-        if category_repo.getByName(name=category.get("name")):
+        if category_repo.getByName(name=(category.get("name") or "").lower()):
             logger.warning(f"category already exists: {category.get('name')}")
             continue
 
@@ -124,6 +124,7 @@ def seedInitialProducts(
     product_repo: product_repo.ProductRepo,
     category_repo: category_repo.CategoryRepo,
     user_repo: user_repo.UserRepo,
+    review_repo: review_repo.ReviewRepo,
 ):
     logger.info(f"Seeding initial products")
 
@@ -161,10 +162,6 @@ def seedInitialProducts(
             logger.warning(f"raw product doesnt have title or sku: {product}")
             continue
 
-        if product_repo.getByName(name=product.get("title")):
-            logger.warning(f"product already exists: {product.get('title')}")
-            continue
-
         # get category
         category = category_repo.getByName(name=product.get("category"))
         if not category:
@@ -180,6 +177,13 @@ def seedInitialProducts(
             description=product.get("description") or "",
             tags=product.get("tags") or [],
         )
+
+        existing_product = product_repo.getByName(name=product.get("title"))
+        if not existing_product:
+            product_repo.create(product=new_product)
+            logger.info(f"initial product created: {new_product.name}")
+        else:
+            logger.warning(f"product already exists: {product.get('title')}")
 
         new_product_variant = product_model.ProductVariantModel(
             id=helper.generateUUID4(),
@@ -199,6 +203,37 @@ def seedInitialProducts(
             ),
         )
 
-        product_repo.create(product=new_product)
-        product_repo.createVariant(product_variant=new_product_variant)
-        logger.info(f"initial product created: {new_product.name}")
+        existing_variant = product_repo.getProductVariantBySku(
+            product_id=new_product_variant.product_id, sku=new_product_variant.sku
+        )
+        if not existing_variant and not existing_product:
+            product_repo.createVariant(product_variant=new_product_variant)
+            logger.info(f"initial product variant created: {new_product_variant.sku}")
+        else:
+            logger.warning(f"product variant already exists: {new_product_variant.sku}")
+
+        # reviews
+        if product.get("reviews") or []:
+            # get customer users
+            customers = user_repo.getAllByRole(role="customer")
+
+            for review, user in zip(product.get("reviews") or [], customers):
+                new_review = review_model.ReviewModel(
+                    id=helper.generateUUID4(),
+                    created_at=time_now,
+                    created_by=seller_user.id,
+                    user_id=user.id,
+                    product_id=new_product.id,
+                    rating=review.get("rating") or 0,
+                    comment=review.get("comment") or "",
+                )
+
+                existing_review = review_repo.get(
+                    product_id=new_review.product_id,
+                    user_id=new_review.user_id,
+                    rating=new_review.rating,
+                )
+                if not existing_review and not existing_product:
+                    review_repo.create(review=new_review)
+                else:
+                    logger.warning(f"review already exists: {new_review.id}")

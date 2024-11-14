@@ -26,7 +26,7 @@ from core.exceptions.http import CustomHttpException
 from core.logging import logger, setupLogger
 from handler import (auth_handler, category_handler, product_handler,
                      user_handler)
-from repository import category_repo, product_repo, user_repo
+from repository import category_repo, product_repo, user_repo, review_repo
 from utils import mongodb as mongodb_utils
 from utils import seeder as seeder_utils
 from utils import minio as minio_utils
@@ -130,6 +130,7 @@ if __name__ == "__main__":
     user_repo_ = user_repo.UserRepo(mongo_db=MongodbClient)
     product_repo_ = product_repo.ProductRepo(mongo_db=MongodbClient)
     category_repo_ = category_repo.CategoryRepo(mongo_db=MongodbClient)
+    review_repo_ = review_repo.ReviewRepo(mongo_db=MongodbClient)
     args = sys.argv
     if len(args) > 1:
         supported_args = [
@@ -165,6 +166,7 @@ if __name__ == "__main__":
                     product_repo=product_repo_,
                     category_repo=category_repo_,
                     user_repo=user_repo_,
+                    review_repo=review_repo_,
                 )
 
     MongodbClient.close()

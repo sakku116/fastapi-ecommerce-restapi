@@ -4,11 +4,14 @@ from pydantic import field_validator, ValidationError
 
 class ReviewModel(MyBaseModel):
     _coll_name = "reviews"
+    _bucket_name = "reviews"
+    _minio_fields = ["attachments"]
 
     user_id: str = ""
     product_id: str
     rating: int
-    comment: Optional[int] = None
+    comment: Optional[str] = None
+    attachments: Optional[list] = None # filenames
 
     @field_validator("rating", mode="before")
     def rating_validator(cls, v):
