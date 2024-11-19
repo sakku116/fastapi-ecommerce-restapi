@@ -7,6 +7,12 @@ class ReviewModel(MyBaseModel):
     _bucket_name = "reviews"
     _minio_fields = ["attachments"]
 
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
     user_id: str = ""
     product_id: str
     rating: int

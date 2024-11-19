@@ -14,6 +14,12 @@ class CategoryModel(MyBaseModel):
     _bucket_name = "categories"
     _minio_fields = ["img"]
 
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
     name: str
     description: Optional[str] = None
     img: Optional[str] = None # filename

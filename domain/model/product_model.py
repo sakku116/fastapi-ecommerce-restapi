@@ -37,6 +37,12 @@ class ProductVariantModel(MyBaseModel):
     _bucket_name = "products"
     _minio_fields = ["image"]
 
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
     is_main: bool = False
     product_id: str
     image: Optional[str] = None  # filename

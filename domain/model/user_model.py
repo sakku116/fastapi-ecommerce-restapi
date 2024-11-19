@@ -14,6 +14,12 @@ class PublicUserModel(MinioUtil):
     _bucket_name = "users"
     _minio_fields = ["profile_picture"]
 
+    id: str = ""
+    created_at: int = 0
+    updated_at: int = 0
+    created_by: str = ""
+    updated_by: str = ""
+
     id: str
     role: Literal[USER_ROLE_ENUMS] = USER_GENDER_ENUMS_DEFAULT
     fullname: str = ""

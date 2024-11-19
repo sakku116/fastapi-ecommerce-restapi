@@ -221,6 +221,7 @@ def seedInitialProducts(
                 new_review = review_model.ReviewModel(
                     id=helper.generateUUID4(),
                     created_at=time_now,
+                    updated_at=time_now,
                     created_by=seller_user.id,
                     user_id=user.id,
                     product_id=new_product.id,

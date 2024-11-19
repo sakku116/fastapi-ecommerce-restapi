@@ -111,10 +111,6 @@ class MyBaseModel(MinioUtil):
     _custom_int64_fields: list[str] = []
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
-    created_by: str = ""
-    updated_by: str = ""
 
     def model_dump(self, **kwargs) -> dict:
         data = super().model_dump(**kwargs)
