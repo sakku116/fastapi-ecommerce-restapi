@@ -6,6 +6,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from babel import Locale
+from typing import Optional
 from babel.numbers import get_currency_symbol, format_currency
 
 
@@ -74,9 +75,9 @@ def isLanguageCodeValid(language_code: str) -> bool:
         return False
 
 
-def isCurrencyCodeValid(currency_code: str) -> bool:
+def isCurrencyCodeValid(currency_code: str, locale: Optional[str] = None) -> bool:
     try:
-        get_currency_symbol(currency_code)
+        get_currency_symbol(currency_code, locale=Locale(locale))
         return True
     except Exception as e:
         return False

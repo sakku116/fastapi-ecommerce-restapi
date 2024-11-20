@@ -1,5 +1,5 @@
 from .base_model import MyBaseModel, _MyBaseModel_Index, MinioUtil
-from pydantic import field_validator, ValidationError
+from pydantic import field_validator, ValidationError, model_validator
 from typing import Literal, Optional
 from datetime import datetime
 from pydantic import BaseModel
@@ -71,16 +71,18 @@ class PublicUserModel(MinioUtil):
 
         return v
 
-    @field_validator("currency", mode="before")
-    def currency_validator(cls, v):
-        if not v:
-            return "USD"
+    @model_validator(mode="before")
+    def currency_validator(self, v):
+        currency = self.get("currency")
+        language = self.get("language") or "en"
+        if not currency:
+            self["currency"] = "USD"
         else:
-            valid = helper.isCurrencyCodeValid(v)
+            valid = helper.isCurrencyCodeValid(currency, locale=language)
             if not valid:
                 raise ValueError("currency is not valid")
 
-        return v
+        return self
 
 class UserModel(MyBaseModel, PublicUserModel):
     _coll_name = "users"
