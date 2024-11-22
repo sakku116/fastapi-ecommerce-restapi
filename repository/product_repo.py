@@ -14,12 +14,14 @@ class ProductRepo:
         self.product_variant_coll = mongo_db.db[
             product_model.ProductVariantModel.getCollName()
         ]
+        self.product_variant_type_coll = mongo_db.db[
+            product_model.ProductVariantTypeModel.getCollName()
+        ]
+
+    ############# PRODUCT ################
 
     def create(self, product: product_model.ProductModel) -> product_model.ProductModel:
         self.product_coll.insert_one(product.model_dump())
-
-    def createVariant(self, product_variant: product_model.ProductVariantModel):
-        self.product_variant_coll.insert_one(product_variant.model_dump())
 
     def getById(self, id: str) -> Union[product_model.ProductModel, None]:
         product = self.product_coll.find_one({"id": id})
@@ -27,25 +29,7 @@ class ProductRepo:
             return None
         return product_model.ProductModel(**product) if product else None
 
-    def getProductVariants(
-        self, product_id: str
-    ) -> list[product_model.ProductVariantModel]:
-        variants = self.product_variant_coll.find({"product_id": product_id}).sort(
-            "is_main", -1
-        )
-        return [product_model.ProductVariantModel(**variant) for variant in variants]
-
-    def getProductVariantBySku(
-        self, product_id: str, sku: str
-    ) -> Union[product_model.ProductVariantModel, None]:
-        variant = self.product_variant_coll.find_one({"sku": sku, "product_id": product_id})
-        if not variant:
-            return None
-        return product_model.ProductVariantModel(**variant)
-
-    def getByName(
-        self, name: str
-    ) -> Union[product_model.ProductModel, None]:
+    def getByName(self, name: str) -> Union[product_model.ProductModel, None]:
         filter = {}
         if name != None:
             filter["name"] = name
@@ -177,3 +161,77 @@ class ProductRepo:
             logger.warning(f"cursor is empty: {e}")
 
         return products, count
+
+    ############### PRODUCT VARIANT ###############
+
+    def createVariant(self, product_variant: product_model.ProductVariantModel):
+        self.product_variant_coll.insert_one(product_variant.model_dump())
+
+    def getProductVariants(
+        self,
+        product_id: Optional[str] = None,
+        product_variant_type_id: Optional[str] = None,
+    ) -> list[product_model.ProductVariantModel]:
+        if [None, None] == [product_id, product_variant_type_id]:
+            raise ValueError(
+                "product_id and product_variant_type_id cannot be both None"
+            )
+
+        filter = {}
+        if product_id != None:
+            filter["product_id"] = product_id
+
+        if product_variant_type_id != None:
+            filter["product_variant_type_id"] = product_variant_type_id
+
+        variants = self.product_variant_coll.find(filter).sort(
+            "is_main", -1
+        )
+        return [product_model.ProductVariantModel(**variant) for variant in variants]
+
+    def getProductVariantBySku(
+        self, product_id: str, sku: str
+    ) -> Union[product_model.ProductVariantModel, None]:
+        variant = self.product_variant_coll.find_one(
+            {"sku": sku, "product_id": product_id}
+        )
+        if not variant:
+            return None
+        return product_model.ProductVariantModel(**variant)
+
+    ################## PRODUCT VARIANT TYPE #################
+
+    def createVariantType(
+        self, product_variant_type: product_model.ProductVariantTypeModel
+    ):
+        self.product_variant_type_coll.insert_one(product_variant_type.model_dump())
+
+    def updateVariantType(
+        self, id: str, product_variant_type: product_model.ProductVariantTypeModel
+    ) -> Optional[product_model.ProductVariantModel]:
+        res = self.product_variant_type_coll.find_one_and_update(
+            {"id": id},
+            {"$set": product_variant_type.model_dump(exclude=["id"])},
+            return_document=ReturnDocument.AFTER,
+        )
+        return product_model.ProductVariantTypeModel(**res) if res else None
+
+    def deleteVariantType(
+        self, id: str
+    ) -> Optional[product_model.ProductVariantTypeModel]:
+        res = self.product_variant_type_coll.find_one_and_delete(
+            {"id": id}, return_document=ReturnDocument.AFTER
+        )
+        return product_model.ProductVariantTypeModel(**res) if res else None
+
+    def getOneVariantType(
+        self, id: str
+    ) -> Optional[product_model.ProductVariantTypeModel]:
+        res = self.product_variant_type_coll.find_one({"id": id})
+        return product_model.ProductVariantTypeModel(**res) if res else None
+
+    def getManyVariantType(
+        self, product_id: str
+    ) -> list[product_model.ProductVariantTypeModel]:
+        res = self.product_variant_type_coll.find({"product_id": product_id})
+        return [product_model.ProductVariantTypeModel(**item) for item in res]

@@ -48,6 +48,7 @@ class GetProductListRespDataItem(BaseProductSummaryResp):
 
 class GetProductDetailRespData__VariantsItem(product_model.ProductVariantModel):
     localized_price: str = ""
+    product_varian_type_name: str = ""
 
 class GetProductDetailRespData(product_model.ProductModel):
     variants: list[GetProductDetailRespData__VariantsItem] = []

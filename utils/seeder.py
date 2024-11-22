@@ -158,6 +158,7 @@ def seedInitialProducts(
     products: list[dict] = raw_products.get("products") or []
     time_now = helper.timeNowEpoch()
     for product in products:
+        time_now = helper.timeNowEpoch()
         if not product.get("title") and not product.get("sku"):
             logger.warning(f"raw product doesnt have title or sku: {product}")
             continue
@@ -170,6 +171,7 @@ def seedInitialProducts(
         new_product = product_model.ProductModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=seller_user.id,
             category_id=category.id if category else None,
             name=product.get("title") or "",
@@ -188,6 +190,7 @@ def seedInitialProducts(
         new_product_variant = product_model.ProductVariantModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=seller_user.id,
             is_main=True,
             product_id=new_product.id,
