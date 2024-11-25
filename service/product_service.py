@@ -100,9 +100,16 @@ class ProductService:
             # urlize minio fields
             variant.urlizeMinioFields(minio_client=self.minio_client)
 
+            # prepare response
             variant_res_item = product_rest.GetProductDetailRespData__VariantsItem(
                 **variant.model_dump()
             )
+
+            # lookup variant type if any
+            if variant.product_variant_type_id:
+                variant_type = self.product_repo.getOneVariantType(id=variant.product_variant_type_id)
+                if variant_type:
+                    variant_res_item.product_varian_type_name = variant_type.name
 
             # localize price
             if variant.price:
