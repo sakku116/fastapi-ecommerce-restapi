@@ -70,7 +70,7 @@ class ProductVariantModel(MyBaseModel):
 
     product_id: str
     product_variant_type_id: str = ""
-    product_variant_name: str
+    product_variant_value: str = ""
     is_main: bool = False
     sku: str
     price: float # dollar
