@@ -1,0 +1,1 @@
+docker rmi fastapi-ecommerce:old

@@ -1,0 +1,1 @@
+docker build -t bdd8-web-api:latest .
