@@ -1,1 +1,1 @@
-docker build -t bdd8-web-api:latest .
+docker build -t fastapi-ecommerce:latest .
