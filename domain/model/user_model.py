@@ -13,6 +13,14 @@ USER_ROLE_ENUMS_DEFAULT = "customer"
 class PublicUserModel(MinioUtil):
     _bucket_name = "users"
     _minio_fields = ["profile_picture"]
+    _custom_indexes = [
+        _MyBaseModel_Index(keys=[("created_at", -1)]),
+        _MyBaseModel_Index(keys=[("updated_at", -1)]),
+        _MyBaseModel_Index(keys=[("username", -1)]),
+        _MyBaseModel_Index(keys=[("role", -1)]),
+        _MyBaseModel_Index(keys=[("fullname", -1)]),
+        _MyBaseModel_Index(keys=[("phone_number", -1)]),
+    ]
 
     id: str = ""
     created_at: int = 0

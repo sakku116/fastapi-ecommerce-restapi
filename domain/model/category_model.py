@@ -1,4 +1,4 @@
-from .base_model import MyBaseModel
+from .base_model import MyBaseModel, _MyBaseModel_Index
 from typing import Optional, Literal
 from pydantic import field_validator
 
@@ -13,6 +13,11 @@ class CategoryModel(MyBaseModel):
     _coll_name = "categories"
     _bucket_name = "categories"
     _minio_fields = ["img"]
+    _custom_indexes = [
+        _MyBaseModel_Index(keys=[("created_at", -1)]),
+        _MyBaseModel_Index(keys=[("updated_at", -1)]),
+        _MyBaseModel_Index(keys=[("name", -1)]),
+    ]
 
     id: str = ""
     created_at: int = 0

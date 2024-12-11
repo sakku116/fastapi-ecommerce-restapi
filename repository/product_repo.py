@@ -60,13 +60,13 @@ class ProductRepo:
         category_id: Optional[str] = None,
         query: Optional[str] = None,
         query_by: Optional[
-            Literal[product_model.QUERIABLE_FIELDS_ENUMS]
+            Literal["name", "brand", "sku"]
         ] = None,  # sort by all possible fields if none
         skip: Optional[int] = None,
         limit: Optional[int] = 10,
         sort_by: Literal[
-            product_model.SORTABLE_FIELDS_ENUMS
-        ] = product_model.SORTABLE_FIELDS_ENUMS_DEF,
+            Literal["created_at", "updated_at", "title", "price"]
+        ] = "created_at",
         sort_order: Literal[-1, 1] = -1,
         do_count: bool = False,
         lookup_variants: bool = True,  # sorted by is_main:1
@@ -83,7 +83,7 @@ class ProductRepo:
                 match1_or.extend(
                     [
                         {item: {"$regex": query, "$options": "i"}}
-                        for item in product_model.QUERIABLE_FIELDS_LIST
+                        for item in ["created_at", "updated_at", "title", "price"]
                     ]
                 )
             else:

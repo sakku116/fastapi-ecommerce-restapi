@@ -1,15 +1,7 @@
-from .base_model import MyBaseModel
+from .base_model import MyBaseModel, _MyBaseModel_Index
 from typing import Literal, Optional
 from pydantic import BaseModel, field_validator, model_validator
 from utils import helper
-
-SORTABLE_FIELDS_ENUMS = Literal["created_at", "updated_at", "title", "price"]
-SORTABLE_FIELDS_ENUMS_DEF = "created_at"
-
-QUERIABLE_FIELDS_ENUMS = Literal["name", "brand", "sku"]
-QUERIABLE_FIELDS_LIST = ["name", "brand"]
-QUERIABLE_FIELDS_ENUMS_DEF = "name"
-
 
 class ProductModel_Dimensions(BaseModel):
     depth: float = 0
@@ -20,6 +12,11 @@ class ProductModel(MyBaseModel):
     _coll_name = "products"
     _bucket_name = "products"
     _minio_fields = ["images"]
+    _custom_indexes = [
+        _MyBaseModel_Index(keys=[("created_at", -1)]),
+        _MyBaseModel_Index(keys=[("updated_at", -1)]),
+        _MyBaseModel_Index(keys=[("category_id", -1)]),
+    ]
 
     id: str = ""
     created_at: int = 0
@@ -37,6 +34,9 @@ class ProductModel(MyBaseModel):
 
 class ProductVariantTypeModel(MyBaseModel):
     _coll_name = "product_variant_types"
+    _custom_indexes = [
+        _MyBaseModel_Index(keys=[("product_id", -1)]),
+    ]
 
     id: str = ""
     created_at: int = 0
@@ -62,6 +62,11 @@ class ProductVariantModel(MyBaseModel):
     _coll_name = "product_variants"
     _bucket_name = "products"
     _minio_fields = ["image"]
+    _custom_indexes = [
+        _MyBaseModel_Index(keys=[("created_at", -1)]),
+        _MyBaseModel_Index(keys=[("updated_at", -1)]),
+        _MyBaseModel_Index(keys=[("product_variant_type_id", -1)]),
+    ]
 
     id: str = ""
     created_at: int = 0

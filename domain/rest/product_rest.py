@@ -34,9 +34,9 @@ class BaseProductSummaryResp(base_model.MinioUtil):
 class GetProductListReq(BaseModel):
     category_id: Optional[str] = None
     query: Optional[str] = None
-    query_by: Optional[Literal[product_model.QUERIABLE_FIELDS_ENUMS]] = None
-    sort_by: Literal[product_model.SORTABLE_FIELDS_ENUMS] = (
-        product_model.SORTABLE_FIELDS_ENUMS_DEF
+    query_by: Optional[Literal["name", "brand", "sku"]] = None
+    sort_by: Literal["created_at", "updated_at", "title", "price"] = (
+        "created_at"
     )
     sort_order: Literal["asc", "desc"] = "desc"
     page: int = 1

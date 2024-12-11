@@ -6,6 +6,9 @@ ORDER_STATUS_ENUMS_DEF = "pending"
 
 class OrderModel(base_model.MyBaseModel):
     _coll_name = "orders"
+    _custom_indexes = [
+        base_model._MyBaseModel_Index(keys=[("user_id", -1)]),
+    ]
 
     id: str
     created_at: int = 0
@@ -18,6 +21,13 @@ class OrderModel(base_model.MyBaseModel):
 
 class OrderItemModel(base_model.MyBaseModel):
     _coll_name = "order_items"
+    _custom_indexes = [
+        base_model._MyBaseModel_Index(keys=[("created_at", -1)]),
+        base_model._MyBaseModel_Index(keys=[("updated_at", -1)]),
+        base_model._MyBaseModel_Index(keys=[("order_id", -1)]),
+        base_model._MyBaseModel_Index(keys=[("product_id", -1)]),
+        base_model._MyBaseModel_Index(keys=[("product_variant_id", -1)]),
+    ]
 
     id: str
     created_at: int = 0
