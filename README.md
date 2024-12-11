@@ -27,13 +27,30 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 
 ## Getting Started
 
-### Prerequisites
+### How to run with Docker
+1. **Clone the repository**:
 
+    ```bash
+    git clone https://github.com/sakku116/fastapi-ecommerce-restapi.git
+    cd fastapi-ecommerce-restapi
+    ```
+
+2. **Configure environment variables**:
+
+    Create a `.env` file. see [./.env.example](./.env.example) file for env variable examples.
+
+3. **Run docker compose**
+    Run docker compose command:
+    ```
+    docker compose up -d
+    ```
+    The API will be accessible at `http://localhost:8000` (if use default port)
+
+### How to run manually
+#### Prerequisites
 - Python 3.9+
 - MongoDB server
 - MinIO server or S3-compatible storage
-
-### Installation
 
 1. **Clone the repository**:
 
@@ -52,7 +69,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 
 3. **Configure environment variables**:
 
-    Create a `.env` file. see [config/env.py](./config/env.py) file for env variable examples.
+    Create a `.env` file. see [./.env.example](./.env.example) file for env variable examples.
 
 4. **Run the application**:
 
@@ -60,7 +77,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
     python main.py
     ```
 
-    The API will be accessible at `http://localhost:8000`.
+    The API will be accessible at `http://localhost:8000` (if use default port)
 
 5. **Run the application with specific options**:
 
