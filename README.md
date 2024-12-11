@@ -23,7 +23,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 ## Design and Client
 
 - **Figma Design**: [https://www.figma.com/community/file/1282297701057617450](https://www.figma.com/community/file/1282297701057617450)
-- **Mobile Client Repository**: [https://github.com/ericwidhiantara/QuickMart](https://github.com/ericwidhiantara/QuickMart)
+- **Mobile Client Repository**: [https://github.com/ericwidhiantara/QuickMart-KMP](https://github.com/ericwidhiantara/QuickMart-KMP)
 
 ## Getting Started
 
