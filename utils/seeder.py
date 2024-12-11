@@ -198,7 +198,7 @@ def seedInitialProducts(
             stock=product.get("stock") or 0,
             price=product.get("price") or 0,
             price_currency="USD",
-            price_currency_locale="en",
+            price_currency_lang="en",
             discount_percentage=product.get("discountPercentage") or None,
             weight=product.get("weight") or 0,
             dimensions=product_model.ProductModel_Dimensions(

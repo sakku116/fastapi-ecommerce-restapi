@@ -81,7 +81,7 @@ class ProductVariantModel(MyBaseModel):
     sku: str
     price: float # dollar
     price_currency: str
-    price_currency_locale: str
+    price_currency_lang: str
     image: Optional[str] = None  # filename
     discount_percentage: Optional[float] = None
     weight: Optional[float] = None
@@ -91,10 +91,10 @@ class ProductVariantModel(MyBaseModel):
     @model_validator(mode="after")
     def validate(self):
         print(self)
-        if not helper.isLanguageCodeValid(self.price_currency_locale):
-            raise ValueError("price_currency_locale is not valid")
+        if not helper.isLanguageCodeValid(self.price_currency_lang):
+            raise ValueError("price_currency_lang is not valid")
 
-        if not helper.isCurrencyCodeValid(self.price_currency, self.price_currency_locale):
+        if not helper.isCurrencyCodeValid(self.price_currency, self.price_currency_lang):
             raise ValueError("price_currency is not valid")
 
         return self
