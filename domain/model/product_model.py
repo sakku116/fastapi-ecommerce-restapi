@@ -1,6 +1,7 @@
 from .base_model import MyBaseModel
 from typing import Literal, Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
+from utils import helper
 
 SORTABLE_FIELDS_ENUMS = Literal["created_at", "updated_at", "title", "price"]
 SORTABLE_FIELDS_ENUMS_DEF = "created_at"
@@ -74,8 +75,21 @@ class ProductVariantModel(MyBaseModel):
     is_main: bool = False
     sku: str
     price: float # dollar
+    price_currency: str
+    price_currency_locale: str
     image: Optional[str] = None  # filename
     discount_percentage: Optional[float] = None
     weight: Optional[float] = None
     dimensions: Optional[ProductModel_Dimensions] = None
     stock: int
+
+    @model_validator(mode="after")
+    def validate(self):
+        print(self)
+        if not helper.isLanguageCodeValid(self.price_currency_locale):
+            raise ValueError("price_currency_locale is not valid")
+
+        if not helper.isCurrencyCodeValid(self.price_currency, self.price_currency_locale):
+            raise ValueError("price_currency is not valid")
+
+        return self
