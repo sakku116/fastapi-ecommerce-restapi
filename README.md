@@ -179,10 +179,6 @@ _custom_int64_fields: list[str] = []
 The model includes the following default fields:
 ```python
 id: A unique identifier for the model.
-created_at: A timestamp for when the document was created.
-updated_at: A timestamp for when the document was last updated.
-created_by: The user who created the document.
-updated_by: The user who last updated the document.
 ```
 
 ### Minio Utility in MyBaseModel
