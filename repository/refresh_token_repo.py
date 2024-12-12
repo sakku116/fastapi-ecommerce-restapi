@@ -7,7 +7,7 @@ from typing import Union
 
 class RefreshTokenRepo:
     def __init__(self, mongo_db: MongodbClient = Depends()):
-        self.user_coll = mongo_db.db[refresh_token_model.RefreshTokenModel()._coll_name]
+        self.user_coll = mongo_db.db[refresh_token_model.RefreshTokenModel.getCollName()]
 
     def create(self, data: refresh_token_model.RefreshTokenModel):
         return self.user_coll.insert_one(data.model_dump())

@@ -6,7 +6,7 @@ class RefreshTokenModel(MyBaseModel):
 
     id: str = ""
     created_at: datetime
-    created_by: datetime
+    created_by: str
 
     # use id for the token
     expired_at: datetime

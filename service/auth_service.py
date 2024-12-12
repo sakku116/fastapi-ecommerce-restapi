@@ -57,13 +57,15 @@ class AuthService:
             raise exc
 
         # generate jwt token
+        # logger.debug(helper.prettyJson(user.model_dump(mode='json')))
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
             exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
+        # logger.debug(helper.prettyJson(jwt_payload.model_dump(mode="json")))
         jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
+            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
         )
 
         # remove previous refresh token
@@ -121,7 +123,7 @@ class AuthService:
             exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
+            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
         )
 
         # delete current refresh token
@@ -132,7 +134,6 @@ class AuthService:
         new_refresh_token = refresh_token_model.RefreshTokenModel(
             id=helper.generateUUID4(),
             created_at=time_now,
-            updated_at=time_now,
             created_by=user.id,
             expired_at=int(
                 (
@@ -258,7 +259,7 @@ class AuthService:
             exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
+            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
         )
 
         # generate new refresh token

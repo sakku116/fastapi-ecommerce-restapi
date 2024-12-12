@@ -8,7 +8,7 @@ from typing import Union
 
 class OtpRepo:
     def __init__(self, mongo_db: MongodbClient = Depends()):
-        self.user_coll = mongo_db.db[otp_model.OtpModel()._coll_name]
+        self.user_coll = mongo_db.db[otp_model.OtpModel.getCollName()]
 
     def create(self, data: otp_model.OtpModel):
         return self.user_coll.insert_one(data.model_dump())
