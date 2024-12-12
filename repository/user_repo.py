@@ -5,6 +5,7 @@ from pymongo import ReturnDocument
 from core.logging import logger
 from config.mongodb import MongodbClient
 from domain.model import user_model
+from datetime import datetime
 
 
 class UserRepo:
@@ -37,7 +38,7 @@ class UserRepo:
         return user_model.UserModel(**_return) if _return else None
 
     def updateLastActive(
-        self, id: str, last_active: int
+        self, id: str, last_active: datetime
     ) -> Union[user_model.UserModel, None]:
         _return = self.user_coll.find_one_and_update(
             {"id": id},

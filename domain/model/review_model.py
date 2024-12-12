@@ -1,6 +1,7 @@
 from .base_model import MyBaseModel, _MyBaseModel_Index
 from typing import Optional
 from pydantic import field_validator, ValidationError
+from datetime import datetime
 
 class ReviewModel(MyBaseModel):
     _coll_name = "reviews"
@@ -14,8 +15,8 @@ class ReviewModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 

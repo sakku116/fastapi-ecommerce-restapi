@@ -60,7 +60,7 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
@@ -72,14 +72,14 @@ class AuthService:
             self.refresh_token_repo.delete(id=prev_refresh_token.id)
 
         # generate refresh token
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_refresh_token = refresh_token_model.RefreshTokenModel(
             id=helper.generateUUID4(),
             created_at=time_now,
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -103,7 +103,7 @@ class AuthService:
             raise exc
 
         # check if expired
-        if refresh_token.expired_at < helper.timeNowEpoch():
+        if refresh_token.expired_at < helper.timeNow():
             exc = CustomHttpException(status_code=401, message="Refresh token expired")
             logger.error(exc)
 
@@ -118,7 +118,7 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
@@ -128,14 +128,15 @@ class AuthService:
         self.refresh_token_repo.delete(id=payload.refresh_token)
 
         # generate new refresh token
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_refresh_token = refresh_token_model.RefreshTokenModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -169,7 +170,7 @@ class AuthService:
             raise exc
 
         # update last_active
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         user = self.user_repo.updateLastActive(id=claims.sub, last_active=time_now)
         if not user:
             exc = CustomHttpException(status_code=401, message="User not found")
@@ -226,11 +227,12 @@ class AuthService:
         hashed_pw = bcrypt_utils.hashPassword(payload.password)
 
         # create user
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         try:
             new_user = user_model.UserModel(
                 id=helper.generateUUID4(),
                 created_at=time_now,
+                updated_at=time_now,
                 fullname=payload.fullname,
                 username=payload.username,
                 email=payload.email,
@@ -253,21 +255,21 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **new_user.model_dump(),
             sub=new_user.id,
-            exp=datetime.utcnow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(), secret=Env.JWT_SECRET_KEY
         )
 
         # generate new refresh token
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_refresh_token = refresh_token_model.RefreshTokenModel(
             id=helper.generateUUID4(),
             created_at=time_now,
             created_by=new_user.id,
             expired_at=int(
                 (
-                    datetime.utcnow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
+                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
                 ).timestamp()
             ),
         )
@@ -299,10 +301,11 @@ class AuthService:
             self.otp_repo.delete(id=otp.id)
 
         # create new otp
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_otp = otp_model.OtpModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=user.id,
             code=helper.generateRandomNumber(length=6),
         )
@@ -383,7 +386,7 @@ class AuthService:
             raise exc
 
         user.email_verified = True
-        user.updated_at = helper.timeNowEpoch()
+        user.updated_at = helper.timeNow()
         self.user_repo.update(id=user.id, data=user)
 
     async def sendEmailForgotPasswordOTP(
@@ -403,10 +406,11 @@ class AuthService:
             self.otp_repo.delete(id=otp.id)
 
         # create new otp
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_otp = otp_model.OtpModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=user.id,
             code=helper.generateRandomNumber(length=6),
         )
@@ -465,7 +469,7 @@ class AuthService:
 
         # mark as verified
         otp.verified = True
-        otp.updated_at = helper.timeNowEpoch()
+        otp.updated_at = helper.timeNow()
         self.otp_repo.update(id=otp.id, data=otp)
 
         return auth_rest.VerifyForgotPasswordOTPRespData(otp_id=otp.id)
@@ -521,7 +525,7 @@ class AuthService:
         # update password
         user.password = bcrypt_utils.hashPassword(payload.new_password)
         user.updated_by = user.id
-        user.updated_at = helper.timeNowEpoch()
+        user.updated_at = helper.timeNow()
         user = self.user_repo.update(id=user.id, data=user)
         if not user:
             exc = CustomHttpException(

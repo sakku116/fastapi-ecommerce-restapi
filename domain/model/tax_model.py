@@ -1,12 +1,13 @@
 from domain.model import base_model
 from typing import Optional
+from datetime import datetime
 
 class TaxModel(base_model.MyBaseModel):
     _coll_name = "taxes"
 
     id: str
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
 
     name: str

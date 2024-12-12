@@ -107,17 +107,9 @@ class MyBaseModel(MinioUtil):
     ]
     _custom_indexes: list[_MyBaseModel_Index] = []
 
-    _default_int64_fields: list[str] = ["created_at", "updated_at"]
     _custom_int64_fields: list[str] = []
 
     id: str
-
-    def model_dump(self, **kwargs) -> dict:
-        data = super().model_dump(**kwargs)
-        for field in self._custom_int64_fields + self._default_int64_fields:
-            if field in data:
-                data[field] = Int64(data[field])
-        return data
 
     @classmethod
     def getCollName(cls) -> str:
@@ -130,11 +122,3 @@ class MyBaseModel(MinioUtil):
     @classmethod
     def getCustomIndexes(cls):
         return cls._custom_indexes.get_default()
-
-    @classmethod
-    def getDefaultInt64Fields(cls):
-        return cls._default_int64_fields.get_default()
-
-    @classmethod
-    def getCustomInt64Fields(cls):
-        return cls._custom_int64_fields.get_default()

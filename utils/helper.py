@@ -2,7 +2,7 @@ import json
 import mimetypes
 import random
 import time
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from uuid import uuid4
 
 from babel import Locale
@@ -21,7 +21,11 @@ def generateSkip(page: int, limit: int) -> int:
 
 
 def timeNowEpoch() -> int:
-    return int(datetime.utcnow().timestamp())
+    return int(datetime.now(timezone.utc).timestamp())
+
+
+def timeNow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 def prettyJson(data: any) -> str:
@@ -43,19 +47,18 @@ def generateRandomNumber(length: int = 10) -> str:
 
 
 def isExpired(
-    created_at: int, expr_hours: int = None, expr_seconds: int = None
+    created_at: datetime, expr_hours: int = None, expr_seconds: int = None
 ) -> bool:
     if not expr_hours and not expr_seconds:
         raise ValueError("Either 'expr_hours' or 'expr_seconds' must be provided.")
     current_time = int(
-        datetime.utcnow().timestamp()
+        datetime.now(timezone.utc).timestamp()
     )  # Get current time in epoch format
     if expr_hours:
-        expiration_time = created_at + (expr_hours * 3600)
-    elif expr_seconds:
-        expiration_time = created_at + expr_seconds
+        expiration_time = created_at + timedelta(hours=expr_hours)
+    if expr_seconds:
+        expiration_time = created_at + timedelta(seconds=expr_seconds)
     return current_time > expiration_time
-
 
 def isPasswordValid(password: str, length: int = 6) -> bool:
     if len(password) < length:
@@ -89,12 +92,14 @@ def getMimeType(string: str) -> str:
     except Exception as e:
         return ""
 
+
 def localizePrice(price: float, currency_code: str, language_code: str) -> str:
     try:
         locale = Locale(language_code)
         return format_currency(price, currency_code, locale=locale)
     except Exception as e:
         return ""
+
 
 def isImage(filename: str) -> bool:
     mimetype = getMimeType(filename)

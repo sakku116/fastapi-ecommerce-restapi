@@ -1,12 +1,12 @@
 from .base_model import MyBaseModel
+from datetime import datetime
 
 class RefreshTokenModel(MyBaseModel):
     _coll_name = "refresh_tokens"
-    _custom_int64_fields = ["expired_at"]
 
     id: str = ""
-    created_at: int = 0
-    created_by: str = ""
+    created_at: datetime
+    created_by: datetime
 
     # use id for the token
-    expired_at: int = 0
+    expired_at: datetime

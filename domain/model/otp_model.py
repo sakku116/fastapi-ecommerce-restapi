@@ -1,4 +1,5 @@
 from .base_model import MyBaseModel, _MyBaseModel_Index
+from datetime import datetime
 
 class OtpModel(MyBaseModel):
     _coll_name = "otps"
@@ -7,8 +8,8 @@ class OtpModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
 
     verified: bool = False

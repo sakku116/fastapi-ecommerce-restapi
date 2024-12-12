@@ -11,20 +11,13 @@ USER_ROLE_ENUMS = Literal["seller", "customer", "admin"]
 USER_ROLE_ENUMS_DEFAULT = "customer"
 
 class PublicUserModel(MinioUtil):
+    # WARNING: these private attr needed for response behavior usage
     _bucket_name = "users"
     _minio_fields = ["profile_picture"]
-    _custom_indexes = [
-        _MyBaseModel_Index(keys=[("created_at", -1)]),
-        _MyBaseModel_Index(keys=[("updated_at", -1)]),
-        _MyBaseModel_Index(keys=[("username", -1)]),
-        _MyBaseModel_Index(keys=[("role", -1)]),
-        _MyBaseModel_Index(keys=[("fullname", -1)]),
-        _MyBaseModel_Index(keys=[("phone_number", -1)]),
-    ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 
@@ -41,7 +34,7 @@ class PublicUserModel(MinioUtil):
     language: str = "en"
     currency: str = "USD"
 
-    last_active: int = 0
+    last_active: Optional[datetime] = None
 
     @field_validator("username", mode="before")
     def username_validator(cls, v):
@@ -93,11 +86,17 @@ class PublicUserModel(MinioUtil):
         return self
 
 class UserModel(MyBaseModel, PublicUserModel):
+    _bucket_name = "users"
+    _minio_fields = ["profile_picture"]
     _coll_name = "users"
     _custom_indexes = [
         _MyBaseModel_Index(keys=[("username", -1)], unique=True),
         _MyBaseModel_Index(keys=[("email", -1)], unique=True),
+        _MyBaseModel_Index(keys=[("created_at", -1)]),
+        _MyBaseModel_Index(keys=[("updated_at", -1)]),
+        _MyBaseModel_Index(keys=[("role", -1)]),
+        _MyBaseModel_Index(keys=[("fullname", -1)]),
+        _MyBaseModel_Index(keys=[("phone_number", -1)]),
     ]
-    _custom_int64_fields = ["last_active"]
 
     password: str = ""

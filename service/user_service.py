@@ -96,7 +96,7 @@ class UserService:
             raise exc
 
         # update user
-        user.updated_at = helper.timeNowEpoch()
+        user.updated_at = helper.timeNow()
         user.updated_by = user_id
         user = self.user_repo.update(id=user.id, data=user)
         logger.debug(f"updated_user: {user}")
@@ -157,7 +157,7 @@ class UserService:
             raise exc
 
         # update user
-        user.updated_at = helper.timeNowEpoch()
+        user.updated_at = helper.timeNow()
         user.updated_by = user_id
         user.password = bcrypt_utils.hashPassword(payload.new_password)
         self.user_repo.update(id=user.id, data=user)
@@ -219,7 +219,7 @@ class UserService:
 
         # update user object
         user.profile_picture = filename
-        user.updated_at = helper.timeNowEpoch()
+        user.updated_at = helper.timeNow()
         user.updated_by = user_id
         user = self.user_repo.update(id=user.id, data=user)
         if not user:

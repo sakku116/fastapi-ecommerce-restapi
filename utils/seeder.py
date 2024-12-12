@@ -12,12 +12,13 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
     logger.info("Seeding initial users")
 
     users: list[user_model.UserModel] = []
-    time_now = helper.timeNowEpoch()
+    time_now = helper.timeNow()
     if Env.INITIAL_CUSTOMER_USER_USERNAME and Env.INITIAL_CUSTOMER_USER_PASSWORD:
         users.append(
             user_model.UserModel(
                 id=helper.generateUUID4(),
                 created_at=time_now,
+                updated_at=time_now,
                 fullname=Env.INITIAL_CUSTOMER_USER_USERNAME.title().replace("_", " "),
                 username=Env.INITIAL_CUSTOMER_USER_USERNAME,
                 email=f"{Env.INITIAL_CUSTOMER_USER_USERNAME}@gmail.com",
@@ -31,6 +32,7 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
             user_model.UserModel(
                 id=helper.generateUUID4(),
                 created_at=time_now,
+                updated_at=time_now,
                 fullname=Env.INITIAL_SELLER_USER_USERNAME.title().replace("_", " "),
                 username=Env.INITIAL_SELLER_USER_USERNAME,
                 email=f"{Env.INITIAL_SELLER_USER_USERNAME}@gmail.com",
@@ -44,6 +46,7 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
             user_model.UserModel(
                 id=helper.generateUUID4(),
                 created_at=time_now,
+                updated_at=time_now,
                 fullname=Env.INITIAL_ADMIN_USER_USERNAME.title().replace("_", " "),
                 username=Env.INITIAL_ADMIN_USER_USERNAME,
                 email=f"{Env.INITIAL_ADMIN_USER_USERNAME}@gmail.com",
@@ -59,10 +62,14 @@ def seedInitialUsers(user_repo: user_repo.UserRepo):
             or user_repo.getByEmail(user.email)
             or None
         )
+
         if existing:
             logger.warning(f"User @{user.username} ({user.email}) already exists")
             continue
 
+        time_now = helper.timeNow()
+        user.created_at = time_now
+        user.updated_at = time_now
         user_repo.create(user)
 
 
@@ -99,7 +106,7 @@ def seedInitialCategories(
             f"Admin user not found: {Env.INITIAL_ADMIN_USER_USERNAME}"
         )
 
-    time_now = helper.timeNowEpoch()
+    time_now = helper.timeNow()
     for category in raw_categories:
         if "name" not in category:
             logger.warning(f"raw category doesnt have name: {category}")
@@ -112,6 +119,7 @@ def seedInitialCategories(
         new_category = category_model.CategoryModel(
             id=helper.generateUUID4(),
             created_at=time_now,
+            updated_at=time_now,
             created_by=admin_user.id,
             name=category.get("name"),
         )
@@ -156,9 +164,9 @@ def seedInitialProducts(
         )
 
     products: list[dict] = raw_products.get("products") or []
-    time_now = helper.timeNowEpoch()
+    time_now = helper.timeNow()
     for product in products:
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         if not product.get("title") and not product.get("sku"):
             logger.warning(f"raw product doesnt have title or sku: {product}")
             continue

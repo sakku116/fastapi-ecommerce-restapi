@@ -1,5 +1,6 @@
 from .base_model import MyBaseModel, _MyBaseModel_Index
 from typing import Optional, Literal
+from datetime import datetime
 from pydantic import field_validator
 
 SORTABLE_FIELDS_ENUMS = Literal["created_at", "updated_at", "name"]
@@ -20,8 +21,8 @@ class CategoryModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 

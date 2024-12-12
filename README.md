@@ -112,21 +112,11 @@ class MyBaseModel(MinioUtil):
     ]
     _custom_indexes: list[_MyBaseModel_Index] = []
 
-    _default_int64_fields: list[str] = ["created_at", "updated_at"]
-    _custom_int64_fields: list[str] = []
-
     id: str = ""
     created_at: int = 0
     updated_at: int = 0
     created_by: str = ""
     updated_by: str = ""
-
-    def model_dump(self, **kwargs) -> dict:
-        data = super().model_dump(**kwargs)
-        for field in self._custom_int64_fields + self._default_int64_fields:
-            if field in data:
-                data[field] = Int64(data[field])
-        return data
 
     @classmethod
     def getCollName(cls) -> str:
@@ -139,14 +129,6 @@ class MyBaseModel(MinioUtil):
     @classmethod
     def getCustomIndexes(cls):
         return cls._custom_indexes.get_default()
-
-    @classmethod
-    def getDefaultInt64Fields(cls):
-        return cls._default_int64_fields.get_default()
-
-    @classmethod
-    def getCustomInt64Fields(cls):
-        return cls._custom_int64_fields.get_default()
 ```
 
 ### Private Attribute: _coll_name
@@ -165,14 +147,6 @@ _default_indexes: list[_MyBaseModel_Index] = [
     _MyBaseModel_Index(keys=[("id", 1)], unique=True)
 ]
 _custom_indexes: list[_MyBaseModel_Index] = []
-```
-
-### Default and Custom int64 Fields
-This model also includes default fields like created_at and updated_at, which are typically represented as int64 for timestamp storage. You can define custom int64 fields as needed. The defined fields will be converted to `bson.int64.Int64` when `model_dump()` called:
-
-```python
-_default_int64_fields: list[str] = ["created_at", "updated_at"]
-_custom_int64_fields: list[str] = []
 ```
 
 ### Default Model Fields

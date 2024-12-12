@@ -2,6 +2,7 @@ from .base_model import MyBaseModel, _MyBaseModel_Index
 from typing import Literal, Optional
 from pydantic import BaseModel, field_validator, model_validator
 from utils import helper
+from datetime import datetime
 
 class ProductModel_Dimensions(BaseModel):
     depth: float = 0
@@ -19,8 +20,8 @@ class ProductModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 
@@ -39,8 +40,8 @@ class ProductVariantTypeModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 
@@ -69,8 +70,8 @@ class ProductVariantModel(MyBaseModel):
     ]
 
     id: str = ""
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
     updated_by: str = ""
 

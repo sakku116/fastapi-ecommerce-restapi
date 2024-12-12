@@ -1,5 +1,6 @@
 from domain.model import base_model
 from typing import Optional, Literal
+from datetime import datetime
 
 ORDER_STATUS_ENUMS = Literal["pending", "completed", "canceled"]
 ORDER_STATUS_ENUMS_DEF = "pending"
@@ -11,8 +12,8 @@ class OrderModel(base_model.MyBaseModel):
     ]
 
     id: str
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
 
     user_id: str
@@ -30,8 +31,8 @@ class OrderItemModel(base_model.MyBaseModel):
     ]
 
     id: str
-    created_at: int = 0
-    updated_at: int = 0
+    created_at: datetime
+    updated_at: datetime
     created_by: str = ""
 
     order_id: str

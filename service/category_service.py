@@ -83,7 +83,7 @@ class CategoryService:
                 raise exc
 
         # create
-        time_now = helper.timeNowEpoch()
+        time_now = helper.timeNow()
         new_category = category_model.CategoryModel(
             id=helper.generateUUID4(),
             created_at=time_now,
