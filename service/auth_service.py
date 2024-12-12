@@ -1,7 +1,6 @@
 from dataclasses import asdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pydantic import ValidationError
-from typing import Callable, Literal
 
 import jwt
 from fastapi import Depends
@@ -16,7 +15,7 @@ from repository import otp_repo, refresh_token_repo, user_repo
 from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
-from utils.service import email_util
+from utils.service import auth_util, email_util
 
 
 class AuthService:
@@ -26,10 +25,12 @@ class AuthService:
         refresh_token_repo: refresh_token_repo.RefreshTokenRepo = Depends(),
         email_util: email_util.EmailUtil = Depends(),
         otp_repo: otp_repo.OtpRepo = Depends(),
+        auth_util: auth_util.AuthUtil = Depends(),
     ):
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
         self.email_util = email_util
+        self.auth_util = auth_util
         self.otp_repo = otp_repo
 
     def login(self, payload: auth_rest.LoginReq) -> auth_rest.LoginResp:
@@ -56,45 +57,14 @@ class AuthService:
             logger.error(exc)
             raise exc
 
-        # generate jwt token
-        # logger.debug(helper.prettyJson(user.model_dump(mode='json')))
-        jwt_payload = auth_dto.JwtPayload(
-            **user.model_dump(),
-            sub=user.id,
-            exp=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
+        # generate access token and refresh token
+        access_token, refresh_token = self.auth_util.generateAccessTokenAndRefreshToken(
+            user=user
         )
-        jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
-        )
-
-        # remove previous refresh token
-        prev_refresh_token = self.refresh_token_repo.getLastByCreatedBy(
-            created_by=user.id
-        )
-        if prev_refresh_token:
-            self.refresh_token_repo.delete(id=prev_refresh_token.id)
-
-        # generate refresh token
-        time_now = helper.timeNow()
-        new_refresh_token = refresh_token_model.RefreshTokenModel(
-            id=helper.generateUUID4(),
-            created_at=time_now,
-            created_by=user.id,
-            expired_at=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
-        )
-        self.refresh_token_repo.create(data=new_refresh_token)
 
         return auth_rest.LoginResp(
-            access_token=jwt_token,
-            refresh_token=new_refresh_token.id,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
     def refreshToken(
@@ -128,40 +98,14 @@ class AuthService:
             )
         )
 
-        # generate jwt token
-        jwt_payload = auth_dto.JwtPayload(
-            **user.model_dump(),
-            sub=user.id,
-            exp=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
+        # generate access token and refresh token
+        access_token, refresh_token = self.auth_util.generateAccessTokenAndRefreshToken(
+            user=user
         )
-        jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
-        )
-
-        # delete current refresh token
-        self.refresh_token_repo.delete(id=payload.refresh_token)
-
-        # generate new refresh token
-        time_now = helper.timeNow()
-        new_refresh_token = refresh_token_model.RefreshTokenModel(
-            id=helper.generateUUID4(),
-            created_at=time_now,
-            created_by=user.id,
-            expired_at=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
-        )
-        self.refresh_token_repo.create(data=new_refresh_token)
 
         return auth_rest.RefreshTokenResp(
-            access_token=jwt_token,
-            refresh_token=new_refresh_token.id,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
     def verifyToken(self, token: str) -> auth_dto.CurrentUser:
@@ -272,37 +216,14 @@ class AuthService:
 
         self.user_repo.create(data=new_user)
 
-        # generate jwt token
-        jwt_payload = auth_dto.JwtPayload(
-            **new_user.model_dump(),
-            sub=new_user.id,
-            exp=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
+        # generate access token and refresh token
+        access_token, refresh_token = self.auth_util.generateAccessTokenAndRefreshToken(
+            user=new_user
         )
-        jwt_token = jwt_utils.encodeToken(
-            payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
-        )
-
-        # generate new refresh token
-        time_now = helper.timeNow()
-        new_refresh_token = refresh_token_model.RefreshTokenModel(
-            id=helper.generateUUID4(),
-            created_at=time_now,
-            created_by=new_user.id,
-            expired_at=int(
-                (
-                    helper.timeNow() + timedelta(hours=Env.REFRESH_TOKEN_EXPIRES_HOURS)
-                ).timestamp()
-            ),
-        )
-        self.refresh_token_repo.create(data=new_refresh_token)
 
         result = auth_rest.RegisterResp(
-            access_token=jwt_token,
-            refresh_token=new_refresh_token.id,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         return result
 
