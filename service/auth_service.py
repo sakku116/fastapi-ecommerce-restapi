@@ -61,15 +61,20 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=int(
+                (
+                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
+                ).timestamp()
+            ),
         )
-        # logger.debug(helper.prettyJson(jwt_payload.model_dump(mode="json")))
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
         )
 
         # remove previous refresh token
-        prev_refresh_token = self.refresh_token_repo.getLastByCreatedBy(created_by=user.id)
+        prev_refresh_token = self.refresh_token_repo.getLastByCreatedBy(
+            created_by=user.id
+        )
         if prev_refresh_token:
             self.refresh_token_repo.delete(id=prev_refresh_token.id)
 
@@ -116,11 +121,22 @@ class AuthService:
             logger.error(exc)
             raise exc
 
+        # login
+        login_res = self.login(
+            payload=auth_rest.LoginReq(
+                username=user.username, password=payload.refresh_token
+            )
+        )
+
         # generate jwt token
         jwt_payload = auth_dto.JwtPayload(
             **user.model_dump(),
             sub=user.id,
-            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=int(
+                (
+                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
+                ).timestamp()
+            ),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
@@ -155,12 +171,16 @@ class AuthService:
             claims = auth_dto.JwtPayload(
                 **jwt_utils.decodeToken(token, Env.JWT_SECRET_KEY)
             )
-        except jwt.ExpiredSignatureError:
-            exc = CustomHttpException(status_code=401, message="Token expired")
+        except jwt.ExpiredSignatureError as e:
+            exc = CustomHttpException(
+                status_code=401, message="Token expired", detail=str(e)
+            )
             logger.error(exc)
             raise exc
-        except jwt.InvalidTokenError:
-            exc = CustomHttpException(status_code=401, message="Invalid token")
+        except jwt.InvalidTokenError as e:
+            exc = CustomHttpException(
+                status_code=401, message="Invalid token", detail=str(e)
+            )
             logger.error(exc)
             raise exc
         except Exception as e:
@@ -256,7 +276,11 @@ class AuthService:
         jwt_payload = auth_dto.JwtPayload(
             **new_user.model_dump(),
             sub=new_user.id,
-            exp=helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS),
+            exp=int(
+                (
+                    helper.timeNow() + timedelta(hours=Env.TOKEN_EXPIRES_HOURS)
+                ).timestamp()
+            ),
         )
         jwt_token = jwt_utils.encodeToken(
             payload=jwt_payload.model_dump(mode="json"), secret=Env.JWT_SECRET_KEY
@@ -336,9 +360,7 @@ class AuthService:
             logger.error(exc)
             raise exc
 
-    def verifyEmailOTP(
-        self, user_id: str, payload: auth_rest.VerifyEmailOTPReq
-    ):
+    def verifyEmailOTP(self, user_id: str, payload: auth_rest.VerifyEmailOTPReq):
         _params = {
             "user_id": user_id,
             "payload": asdict(payload),

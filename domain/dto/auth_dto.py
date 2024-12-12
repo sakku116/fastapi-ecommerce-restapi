@@ -7,4 +7,4 @@ class CurrentUser(user_model.PublicUserModel):
 
 class JwtPayload(CurrentUser):
     sub: str
-    exp: datetime
+    exp: int

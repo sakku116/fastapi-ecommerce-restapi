@@ -1,6 +1,7 @@
 import jwt
 
 def decodeToken(token: str, secret: str):
+    # print(token)
     return jwt.decode(token, secret, algorithms="HS256")
 
 def encodeToken(payload: dict, secret: str) -> str:
