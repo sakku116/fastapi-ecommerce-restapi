@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Quickmart API",
+    title="E-Commerce API",
     openapi_url=None if Env.PRODUCTION else "/openapi.json",
     docs_url=None if Env.PRODUCTION else "/",
     redoc_url=None if Env.PRODUCTION else "/redoc",
