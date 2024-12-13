@@ -180,3 +180,28 @@ class CategoryService:
         category.urlizeMinioFields(minio_client=self.minio_client)
 
         return category_rest.PatchCategoryRespData(**category.model_dump())
+
+    def deleteCategory(self, category_id: str) -> category_rest.DeleteCategoryRespData:
+        # check category
+        category = self.category_repo.getById(id=category_id)
+        if not category:
+            logger.debug(f"category not found: {category_id}")
+            exc = CustomHttpException(
+                status_code=404,
+                message="Category not found",
+            )
+            logger.error(exc)
+            raise exc
+
+        # delete
+        try:
+            self.category_repo.delete(id=category_id)
+        except Exception as e:
+            logger.error(f"failed to delete category: {str(e)}")
+            exc = CustomHttpException(
+                status_code=500, message="Failed to delete category", detail=str(e)
+            )
+            logger.error(exc)
+            raise exc
+
+        return category_rest.DeleteCategoryRespData(**category.model_dump())

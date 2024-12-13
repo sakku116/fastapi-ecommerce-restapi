@@ -71,3 +71,20 @@ def patch_category(
     resp = generic_resp.RespData[category_rest.PatchCategoryRespData](data=data)
     resp.meta.message = "Category updated successfully"
     return resp
+
+@CategoryRouter.delete(
+    "/{category_id}",
+    tags=["Admin Only"],
+    description="admin only",
+    response_model=generic_resp.RespData[category_rest.DeleteCategoryRespData],
+)
+def delete_category(
+    category_id: str,
+    category_service: category_service.CategoryService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(RoleRequired(role=["admin"])),
+):
+    category_service.deleteCategory(category_id=category_id)
+
+    resp = generic_resp.RespData()
+    resp.meta.message = "Category deleted successfully"
+    return resp

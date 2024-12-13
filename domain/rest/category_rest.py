@@ -38,3 +38,6 @@ class PatchCategoryReq:
 
 class PatchCategoryRespData(category_model.CategoryModel):
     pass
+
+class DeleteCategoryRespData(category_model.CategoryModel):
+    pass
