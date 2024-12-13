@@ -19,8 +19,7 @@ class BaseTokenResp(BaseModel):
     refresh_token: str
 
 
-@dataclass
-class LoginReq:
+class LoginReq(BaseModel):
     username: str = Form()
     password: str = Form()
 
@@ -29,8 +28,7 @@ class LoginResp(RespData, BaseTokenResp):
     pass
 
 
-@dataclass
-class RefreshTokenReq:
+class RefreshTokenReq(BaseModel):
     refresh_token: str = Form()
 
 
@@ -38,8 +36,7 @@ class RefreshTokenResp(RespData, BaseTokenResp):
     pass
 
 
-@dataclass
-class RegisterReq:
+class RegisterReq(BaseModel):
     fullname: str = Form()
     username: str = Form()
     email: str = Form()
@@ -51,32 +48,27 @@ class RegisterResp(RespData, BaseTokenResp):
     pass
 
 
-@dataclass
-class CheckTokenReq:
+class CheckTokenReq(BaseModel):
     access_token: str = Form()
 
 
 class CheckTokenRespData(auth_dto.CurrentUser):
     pass
 
-@dataclass
-class VerifyEmailOTPReq:
+class VerifyEmailOTPReq(BaseModel):
     otp_code: str = Form()
 
-@dataclass
-class SendEmailForgotPasswordOTPReq:
+class SendEmailForgotPasswordOTPReq(BaseModel):
     email: str = Form()
 
-@dataclass
-class VerifyForgotPasswordOTPReq:
+class VerifyForgotPasswordOTPReq(BaseModel):
     email: str = Form()
     otp_code: str = Form()
 
 class VerifyForgotPasswordOTPRespData(BaseModel):
     otp_id: str = ""
 
-@dataclass
-class ChangeForgottenPasswordReq:
+class ChangeForgottenPasswordReq(BaseModel):
     otp_id: str = Form()
     new_password: str = Form()
     confirm_password: str = Form()
