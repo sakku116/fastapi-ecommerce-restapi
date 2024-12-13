@@ -51,3 +51,23 @@ def create_category(
     resp = generic_resp.RespData[category_rest.CreateCategoryRespData](data=data)
     resp.meta.message = "Category created successfully"
     return resp
+
+@CategoryRouter.patch(
+    "/{category_id}",
+    tags=["Admin Only"],
+    description="admin only",
+    response_model=generic_resp.RespData[category_rest.PatchCategoryRespData],
+)
+def patch_category(
+    category_id: str,
+    payload: category_rest.PatchCategoryReq = Depends(),
+    category_service: category_service.CategoryService = Depends(),
+    current_user: auth_dto.CurrentUser = Depends(RoleRequired(role=["admin"])),
+):
+    data = category_service.patchCategory(
+        category_id=category_id, payload=payload
+    )
+
+    resp = generic_resp.RespData[category_rest.PatchCategoryRespData](data=data)
+    resp.meta.message = "Category updated successfully"
+    return resp

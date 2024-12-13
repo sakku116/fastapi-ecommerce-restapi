@@ -1,13 +1,15 @@
 from fastapi import Depends
+from minio import Minio
+from pydantic import ValidationError
 
+from config.minio import getMinioClient
 from core.exceptions.http import CustomHttpException
 from core.logging import logger
-from domain.rest import category_rest
 from domain.model import category_model
-from config.minio import getMinioClient
+from domain.rest import category_rest
 from repository import category_repo
 from utils import helper
-from minio import Minio
+from dataclasses import asdict
 
 
 class CategoryService:
@@ -89,7 +91,7 @@ class CategoryService:
             created_at=time_now,
             updated_at=time_now,
             created_by=curr_user_id,
-            name=payload.name.lower(),
+            name=payload.name,
             description=payload.description,
             img=category_img,
         )
@@ -97,3 +99,84 @@ class CategoryService:
 
         new_category.urlizeMinioFields(minio_client=self.minio_client)
         return category_rest.CreateCategoryRespData(**new_category.model_dump())
+
+    def patchCategory(
+        self, category_id: str, payload: category_rest.PatchCategoryReq
+    ) -> category_rest.PatchCategoryRespData:
+        # check existing category
+        category = self.category_repo.getById(id=category_id)
+        if not category:
+            logger.debug(f"category not found: {category_id}")
+            exc = CustomHttpException(
+                status_code=404,
+                message="Category not found",
+            )
+            logger.error(exc)
+            raise exc
+
+        # update fields
+        if payload.name != None:
+            payload.name = payload.name.lower()
+
+        if payload.description != None:
+            if payload.description == "null":
+                payload.description = None
+            else:
+                payload.description = payload.description
+
+        if payload.img and payload.img.filename:
+            if not helper.isImage(payload.img.filename):
+                logger.debug(f"file is not an image: {payload.img.filename}")
+                exc = CustomHttpException(
+                    status_code=400,
+                    message="File is not an image",
+                )
+                logger.error(exc)
+                raise exc
+
+            category_img = f"{helper.generateUUID4()}-{payload.img.filename}"
+            try:
+                self.minio_client.put_object(
+                    bucket_name=category_model.CategoryModel.getBucketName(),
+                    object_name=category_img,
+                    data=payload.img.file,
+                    length=payload.img.size or 0,
+                    content_type=helper.getMimeType(payload.img.filename),
+                )
+            except Exception as e:
+                logger.error(f"failed to store image: {str(e)}")
+                exc = CustomHttpException(
+                    status_code=500, message="Failed to store image", detail=str(e)
+                )
+                logger.error(exc)
+                raise exc
+
+        category.updated_at = helper.timeNow()
+
+        # validate
+        try:
+            category.model_validate(**asdict(payload))
+        except ValidationError as e:
+            for error in e.errors():
+                exc = CustomHttpException(
+                    status_code=400,
+                    message=error.get("msg") or "Invalid value",
+                    detail=e.json(),
+                )
+                logger.error(exc)
+                raise exc
+
+        # update
+        try:
+            self.category_repo.update(category=category)
+        except Exception as e:
+            logger.error(f"failed to update category: {str(e)}")
+            exc = CustomHttpException(
+                status_code=500, message="Failed to update category", detail=str(e)
+            )
+            logger.error(exc)
+            raise exc
+
+        category.urlizeMinioFields(minio_client=self.minio_client)
+
+        return category_rest.PatchCategoryRespData(**category.model_dump())
