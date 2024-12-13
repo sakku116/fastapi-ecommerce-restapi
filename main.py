@@ -2,6 +2,11 @@ from dotenv import dotenv_values, find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(), override=True)
 
+from core.logging import setupLogger
+setupLogger()
+
+from core.logging import logger
+
 import logging
 import sys
 from contextlib import asynccontextmanager
@@ -18,18 +23,18 @@ from uvicorn.config import LOGGING_CONFIG
 
 from config.email import GmailEmailClient
 from config.env import Env
-from config.mongodb import MongodbClient
 from config.minio import getMinioClient
+from config.mongodb import MongodbClient
 from core import middlewares
 from core.exceptions import handlers as exception_handlers
 from core.exceptions.http import CustomHttpException
-from core.logging import logger, setupLogger
+
 from handler import (auth_handler, category_handler, product_handler,
                      user_handler)
-from repository import category_repo, product_repo, user_repo, review_repo
+from repository import category_repo, product_repo, review_repo, user_repo
+from utils import minio as minio_utils
 from utils import mongodb as mongodb_utils
 from utils import seeder as seeder_utils
-from utils import minio as minio_utils
 
 requests.packages.urllib3.disable_warnings()
 
@@ -47,7 +52,6 @@ logging.basicConfig(
 logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 # setup custom logger
-setupLogger()
 
 # default uvicorn logging format
 LOGGING_CONFIG["formatters"]["default"][

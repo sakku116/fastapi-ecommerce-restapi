@@ -10,7 +10,7 @@ class PackagePathFilter(logging.Filter):
         super().__init__()
 
     def filter(self, record):
-        record.pathname = record.pathname.replace(f"{self.base_path_to_remove}/", "")
+        record.pathname = record.pathname.replace(f"{self.base_path_to_remove}", "").removeprefix("/").removeprefix("\\")
         return True
 
 def setupLogger():
