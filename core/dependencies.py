@@ -1,19 +1,18 @@
 import logging
+from typing import Literal, Type, TypeVar
 
-from fastapi import Depends, Header
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
-from service import auth_service
-from fastapi import Request
-from config.env import Env
-from utils import helper
-import json
-from typing import Optional, Literal
+from pydantic import BaseModel
+
+from core.exceptions.http import CustomHttpException
 from core.logging import logger
 from domain.dto import auth_dto
-from core.exceptions.http import CustomHttpException
 from domain.model import user_model
+from service import auth_service
 
 reusable_token = OAuth2PasswordBearer("/auth/login")
+_TModel = TypeVar("_TModel", bound=BaseModel)
 
 
 async def verifyToken(
@@ -22,6 +21,7 @@ async def verifyToken(
 ) -> auth_dto.CurrentUser:
     current_user = auth_service.verifyToken(token=token)
     return current_user
+
 
 class RoleRequired:
     def __init__(self, role: list[Literal[user_model.USER_ROLE_ENUMS]]):
@@ -34,3 +34,17 @@ class RoleRequired:
             raise exc
 
         return current_user
+
+
+def formOrJson(model: Type[_TModel]) -> _TModel:
+    async def formOrJsonInner(request: Request) -> _TModel:
+        type_ = request.headers["Content-Type"].split(";", 1)[0]
+        if type_ == "application/json":
+            data = await request.json()
+        elif type_ == "multipart/form-data":
+            data = await request.form()
+        else:
+            raise CustomHttpException(status_code=415, message="Unsupported Media Type")
+        return model.model_validate(data)
+
+    return Depends(formOrJsonInner)
