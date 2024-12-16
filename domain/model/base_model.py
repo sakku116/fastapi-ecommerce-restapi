@@ -1,14 +1,12 @@
 import mimetypes
 from datetime import timedelta
-from typing import Literal, Optional, Union
+from typing import Literal, Union
 
-from bson.int64 import Int64
 from minio import Minio
 from pydantic import BaseModel, PrivateAttr
 from pydantic.fields import ModelPrivateAttr
 
 from core.logging import logger
-from utils import helper
 
 
 class _MyBaseModel_Index(BaseModel):
