@@ -189,6 +189,12 @@ class ProductRepo:
         )
         return [product_model.ProductVariantModel(**variant) for variant in variants]
 
+    def getProductVariant(self, id: str) -> Union[product_model.ProductVariantModel, None]:
+        product_variant = self.product_variant_coll.find_one({"id": id})
+        if not product_variant:
+            return None
+        return product_model.ProductVariantModel(**product_variant)
+
     def getProductVariantBySku(
         self, product_id: str, sku: str
     ) -> Union[product_model.ProductVariantModel, None]:

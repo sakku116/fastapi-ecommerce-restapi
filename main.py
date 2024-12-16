@@ -3,9 +3,8 @@ from dotenv import dotenv_values, find_dotenv, load_dotenv
 load_dotenv(find_dotenv(), override=True)
 
 from core.logging import setupLogger
-setupLogger()
 
-from core.logging import logger
+setupLogger()
 
 import logging
 import sys
@@ -28,9 +27,14 @@ from config.mongodb import MongodbClient
 from core import middlewares
 from core.exceptions import handlers as exception_handlers
 from core.exceptions.http import CustomHttpException
-
-from handler import (auth_handler, category_handler, product_handler,
-                     user_handler)
+from core.logging import logger
+from handler import (
+    auth_handler,
+    cart_handler,
+    category_handler,
+    product_handler,
+    user_handler,
+)
 from repository import category_repo, product_repo, review_repo, user_repo
 from utils import minio as minio_utils
 from utils import mongodb as mongodb_utils
@@ -114,6 +118,7 @@ app.include_router(auth_handler.AuthRouter)
 app.include_router(user_handler.UserRouter)
 app.include_router(product_handler.ProductRouter)
 app.include_router(category_handler.CategoryRouter)
+app.include_router(cart_handler.CartRouter)
 
 if __name__ == "__main__":
     # checking unused env ferm .env file

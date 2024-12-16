@@ -25,3 +25,4 @@ class CartItemModel(base_model.MyBaseModel):
     product_id: str
     product_variant_id: Optional[str] = None
     quantity: int
+    description: Optional[str] = ""
