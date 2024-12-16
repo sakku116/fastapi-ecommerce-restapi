@@ -36,12 +36,15 @@ class RoleRequired:
         return current_user
 
 
-def formOrJson(model: Type[_TModel]) -> _TModel:
+def formOrJsonDependGenerator(model: Type[_TModel]) -> _TModel:
     async def formOrJsonInner(request: Request) -> _TModel:
         type_ = request.headers["Content-Type"].split(";", 1)[0]
         if type_ == "application/json":
             data = await request.json()
-        elif type_ == "multipart/form-data" or type_ == "application/x-www-form-urlencoded":
+        elif (
+            type_ == "multipart/form-data"
+            or type_ == "application/x-www-form-urlencoded"
+        ):
             data = await request.form()
         else:
             raise CustomHttpException(status_code=415, message="Unsupported Media Type")
