@@ -1,4 +1,3 @@
-from config.mongodb import getMongoDB
 from domain.model import user_model, product_model, category_model, review_model
 from repository import user_repo, product_repo, category_repo, review_repo
 from utils import bcrypt as bcrypt_utils
