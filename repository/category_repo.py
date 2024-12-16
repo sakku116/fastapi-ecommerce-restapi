@@ -53,13 +53,11 @@ class CategoryRepo:
         self,
         query: Optional[str] = None,
         query_by: Optional[
-            Literal[category_model.QUERIABLE_FIELDS_ENUMS]
+            Literal["name"]
         ] = None,  # sort by all possible fields if none
         skip: Optional[int] = None,
         limit: Optional[int] = 10,
-        sort_by: Literal[
-            category_model.SORTABLE_FIELDS_ENUMS
-        ] = category_model.SORTABLE_FIELDS_ENUMS_DEF,
+        sort_by: Literal["created_at", "updated_at", "name"] = "updated_at",
         sort_order: Literal[-1, 1] = -1,
         do_count: bool = False,
     ) -> tuple[list[category_dto.GetListResItem], int]:
@@ -72,7 +70,7 @@ class CategoryRepo:
                 match1_or.extend(
                     [
                         {item: {"$regex": query, "$options": "i"}}
-                        for item in category_model.QUERIABLE_FIELDS_LIST
+                        for item in ["name"]
                     ]
                 )
             else:
