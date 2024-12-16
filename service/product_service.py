@@ -1,14 +1,13 @@
+from babel import Locale
 from fastapi import Depends
+from minio import Minio
 
+from config.minio import getMinioClient
 from core.exceptions.http import CustomHttpException
 from core.logging import logger
-from domain.model import product_model
 from domain.rest import product_rest
 from repository import product_repo, user_repo
 from utils import helper
-from config.minio import getMinioClient
-from babel import Locale
-from minio import Minio
 
 
 class ProductService:
