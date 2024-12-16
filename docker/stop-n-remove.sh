@@ -1,2 +1,2 @@
-docker stop fastapi-ecommerce
-docker rm fastapi-ecommerce
+docker stop ecommerce_restapi
+docker rm ecommerce_restapi

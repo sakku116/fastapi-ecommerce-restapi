@@ -1,1 +1,1 @@
-docker build -t fastapi-ecommerce:latest .
+docker build -t ecommerce_restapi:latest .

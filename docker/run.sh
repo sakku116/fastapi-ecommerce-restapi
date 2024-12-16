@@ -1,1 +1,1 @@
-docker run --restart always --name fastapi-ecommerce -p 8000:8000 --env-file ./.env -d fastapi-ecommerce:latest
+docker run --restart always --name ecommerce_restapi -p 8000:8000 --env-file ./.env -d ecommerce_restapi:latest

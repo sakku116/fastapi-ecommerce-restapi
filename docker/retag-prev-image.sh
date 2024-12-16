@@ -1,1 +1,1 @@
-docker tag fastapi-ecommerce:latest fastapi-ecommerce:old
+docker tag ecommerce_restapi:latest ecommerce_restapi:old
