@@ -21,7 +21,7 @@ class GetCategoryListRespDataItem(category_model.CategoryModel):
 class CreateCategoryReq():
     name: str = Form()
     description: Optional[str] = Form(None)
-    img: Optional[UploadFile] = UploadFile(...)
+    img: Optional[UploadFile] = None
 
 
 class CreateCategoryRespData(category_model.CategoryModel):

@@ -116,13 +116,13 @@ class CategoryService:
 
         # update fields
         if payload.name != None:
-            payload.name = payload.name.lower()
+            category.name = payload.name.lower()
 
         if payload.description != None:
             if payload.description == "null":
-                payload.description = None
+                category.description = None
             else:
-                payload.description = payload.description
+                category.description = payload.description
 
         if payload.img and payload.img.filename:
             if not helper.isImage(payload.img.filename):
@@ -150,6 +150,8 @@ class CategoryService:
                 )
                 logger.error(exc)
                 raise exc
+
+            category.img = category_img
 
         category.updated_at = helper.timeNow()
 
