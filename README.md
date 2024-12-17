@@ -27,7 +27,7 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 
 ## Getting Started
 
-### How to run with Docker
+### How to run with Docker (bundled with minio & mongodb)
 1. **Clone the repository**:
 
     ```bash
