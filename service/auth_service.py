@@ -8,9 +8,9 @@ from config.env import Env
 from core.exceptions.http import CustomHttpException
 from core.logging import logger
 from domain.dto import auth_dto
-from domain.model import otp_model, user_model, cart_model, wallet_model
+from domain.model import cart_model, otp_model, user_model, wallet_model
 from domain.rest import auth_rest
-from repository import otp_repo, refresh_token_repo, user_repo, cart_repo
+from repository import cart_repo, otp_repo, refresh_token_repo, user_repo, wallet_repo
 from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
@@ -26,6 +26,7 @@ class AuthService:
         otp_repo: otp_repo.OtpRepo = Depends(),
         auth_util: auth_util.AuthUtil = Depends(),
         cart_repo: cart_repo.CartRepo = Depends(),
+        wallet_repo: wallet_repo.WalletRepo = Depends(),
     ):
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
@@ -33,6 +34,7 @@ class AuthService:
         self.auth_util = auth_util
         self.otp_repo = otp_repo
         self.cart_repo = cart_repo
+        self.wallet_repo = wallet_repo
 
     def login(self, payload: auth_rest.LoginReq) -> auth_rest.LoginResp:
         # check if input is email
@@ -236,9 +238,20 @@ class AuthService:
             except Exception as e:
                 logger.error(f"error creating cart for user {user_id}: {e}")
 
-            # cart
+            # wallet
             logger.debug(f"creating wallet for user {user_id}")
-            # TODO
+            wallet = wallet_model.WalletModel(
+                id=helper.generateUUID4(),
+                created_at=time_now,
+                updated_at=time_now,
+                user_id=user_id,
+                balance=0,
+            )
+
+            try:
+                self.wallet_repo.create(wallet=wallet)
+            except Exception as e:
+                logger.error(f"error creating wallet for user {user_id}: {e}")
 
         bt.add_task(initUserData, user_id=new_user.id)
 
