@@ -34,7 +34,6 @@ class CartService:
                 id=helper.generateUUID4(),
                 created_at=time_now,
                 updated_at=time_now,
-                created_by=current_user.id,
                 user_id=current_user.id,
             )
             self.cart_repo.create(cart=cart)
@@ -245,7 +244,6 @@ class CartService:
                 id=helper.generateUUID4(),
                 created_at=time_now,
                 updated_at=time_now,
-                created_by=current_user.id,
                 user_id=current_user.id,
             )
             self.cart_repo.create(cart=cart)

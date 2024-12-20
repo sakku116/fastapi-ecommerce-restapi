@@ -3,12 +3,14 @@ from typing import Optional
 from datetime import datetime
 
 class CartModel(base_model.MyBaseModel):
+    """
+    one user can have only one cart
+    """
     _coll_name = "carts"
 
     id: str
     created_at: datetime
     updated_at: datetime
-    created_by: str = ""
 
     user_id: str
 
@@ -19,7 +21,7 @@ class CartItemModel(base_model.MyBaseModel):
     id: str
     created_at: datetime
     updated_at: datetime
-    created_by: str = ""
+    created_by: str
 
     cart_id: str
     product_id: str
