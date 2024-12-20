@@ -5,6 +5,7 @@ from core.logging import logger
 from domain.rest import wallet_rest
 from repository import wallet_repo
 from utils import helper
+from domain.model import wallet_model
 
 
 class WalletService:
@@ -48,9 +49,22 @@ class WalletService:
     def getWallet(self, user_id: str) -> wallet_rest.GetWalletRespData:
         wallet = self.wallet_repo.getByUserId(user_id=user_id)
         if not wallet:
-            exc = CustomHttpException(status_code=404, message="wallet not found")
-            logger.debug(f"failed to get wallet of user {user_id}: {exc}")
-            raise exc
+            # create new wallet
+            wallet = wallet_model.WalletModel(
+                id=helper.generateUUID4(),
+                created_at=helper.timeNow(),
+                updated_at=helper.timeNow(),
+                user_id=user_id,
+            )
+
+            try:
+                self.wallet_repo.create(wallet)
+            except Exception as e:
+                exc = CustomHttpException(
+                    status_code=500, message="failed to create wallet", detail=str(e)
+                )
+                logger.debug(f"failed to create wallet of user {user_id}: {exc}")
+                raise exc
 
         # resp data
         resp_data = wallet_rest.GetWalletRespData(**wallet.model_dump())

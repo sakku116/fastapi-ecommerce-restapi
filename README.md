@@ -12,6 +12,8 @@ A REST API backend for an e-commerce application built with **FastAPI**, **Mongo
 - **Categories**: Organize products into categories to improve discoverability.
 - **Order Management**: Basic order handling for checkout and order history.
 - **Object Storage**: Media uploads and storage with MinIO, compatible with Amazon S3.
+- **Integrated Wallet**: Built-in wallet system to manage user balances, process payments, and handle refunds directly within the platform.
+    > Other payment methods and top-up methods are coming soon.
 
 ## Tech Stack
 
