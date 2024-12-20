@@ -10,7 +10,7 @@ class WalletRepo:
         self.wallet_coll = mongo_db.db[wallet_model.WalletModel.getCollName()]
 
     def create(self, data: wallet_model.WalletModel):
-        self.wallet_coll.insert_one(data)
+        self.wallet_coll.insert_one(data.model_dump())
 
     def getByUserId(self, user_id: str) -> Union[wallet_model.WalletModel, None]:
         wallet = self.wallet_coll.find_one({"user_id": user_id})

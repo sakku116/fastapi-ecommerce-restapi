@@ -34,6 +34,7 @@ from handler import (
     category_handler,
     product_handler,
     user_handler,
+    wallet_handler,
 )
 from repository import category_repo, product_repo, review_repo, user_repo
 from utils import minio as minio_utils
@@ -119,6 +120,7 @@ app.include_router(user_handler.UserRouter)
 app.include_router(product_handler.ProductRouter)
 app.include_router(category_handler.CategoryRouter)
 app.include_router(cart_handler.CartRouter)
+app.include_router(wallet_handler.WalletRouter)
 
 if __name__ == "__main__":
     # checking unused env ferm .env file

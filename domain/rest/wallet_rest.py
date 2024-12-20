@@ -5,7 +5,7 @@ class TopUpWalletRequest(BaseModel):
     amount: float
 
 class TopUpWalletRespData(wallet_model.WalletModel):
-    pass
+    localized_balance: str
 
 class GetWalletRespData(wallet_model.WalletModel):
-    pass
+    localized_balance: str
