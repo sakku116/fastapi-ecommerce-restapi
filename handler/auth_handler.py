@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 
 from domain.rest import auth_rest, generic_resp
 from utils import request as req_utils
@@ -25,10 +25,11 @@ also my mobile client GUY need it inside of the `data` field.
     },
 )
 def register(
-    payload = formOrJsonDependGenerator(auth_rest.RegisterReq),
+    bt: BackgroundTasks,
+    payload=formOrJsonDependGenerator(auth_rest.RegisterReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
-    resp = auth_service.register(payload=payload)
+    resp = auth_service.register(payload=payload, bt=bt)
     resp.data = auth_rest.BaseTokenResp(
         access_token=resp.access_token,
         refresh_token=resp.refresh_token,
@@ -49,7 +50,7 @@ also my mobile client GUY need it inside of the `data` field
     },
 )
 def login(
-    payload = formOrJsonDependGenerator(auth_rest.LoginReq),
+    payload=formOrJsonDependGenerator(auth_rest.LoginReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.login(payload=payload)
@@ -72,10 +73,10 @@ also my mobile client GUY need it inside of the `data` field.
         "requestBody": req_utils.generateFormOrJsonOpenapiBody(
             auth_rest.RefreshTokenReq
         )
-    }
+    },
 )
 def refresh_token(
-    payload = formOrJsonDependGenerator(auth_rest.RefreshTokenReq),
+    payload=formOrJsonDependGenerator(auth_rest.RefreshTokenReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.refreshToken(payload=payload)
@@ -91,10 +92,10 @@ def refresh_token(
     response_model=generic_resp.RespData[auth_rest.CheckTokenRespData],
     openapi_extra={
         "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.CheckTokenReq)
-    }
+    },
 )
 def check_token(
-    payload = formOrJsonDependGenerator(auth_rest.CheckTokenReq),
+    payload=formOrJsonDependGenerator(auth_rest.CheckTokenReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     resp = auth_service.checkToken(payload=payload)
@@ -105,11 +106,13 @@ def check_token(
     "/forgot-password/send-otp",
     response_model=generic_resp.RespData,
     openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.SendEmailForgotPasswordOTPReq)
-    }
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
+            auth_rest.SendEmailForgotPasswordOTPReq
+        )
+    },
 )
 async def forgot_password_send_otp(
-    payload = formOrJsonDependGenerator(auth_rest.SendEmailForgotPasswordOTPReq),
+    payload=formOrJsonDependGenerator(auth_rest.SendEmailForgotPasswordOTPReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     await auth_service.sendEmailForgotPasswordOTP(payload=payload)
@@ -122,11 +125,13 @@ async def forgot_password_send_otp(
     "/forgot-password/verify-otp",
     response_model=generic_resp.RespData[auth_rest.VerifyForgotPasswordOTPRespData],
     openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.VerifyForgotPasswordOTPReq)
-    }
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
+            auth_rest.VerifyForgotPasswordOTPReq
+        )
+    },
 )
 def forgot_password_verify_otp(
-    payload = formOrJsonDependGenerator(auth_rest.VerifyForgotPasswordOTPReq),
+    payload=formOrJsonDependGenerator(auth_rest.VerifyForgotPasswordOTPReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     data = auth_service.verifyForgotPasswordOTP(payload=payload)
@@ -139,11 +144,13 @@ def forgot_password_verify_otp(
     "/forgot-password/change-password",
     response_model=generic_resp.RespData,
     openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.ChangeForgottenPasswordReq)
-    }
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
+            auth_rest.ChangeForgottenPasswordReq
+        )
+    },
 )
 def change_forgotten_password(
-    payload = formOrJsonDependGenerator(auth_rest.ChangeForgottenPasswordReq),
+    payload=formOrJsonDependGenerator(auth_rest.ChangeForgottenPasswordReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     auth_service.changeForgottenPassword(payload=payload)
@@ -170,12 +177,14 @@ async def verify_email_send_otp(
     "/verify-email/verify-otp",
     response_model=generic_resp.RespData,
     openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.VerifyEmailOTPReq)
-    }
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
+            auth_rest.VerifyEmailOTPReq
+        )
+    },
 )
 def verify_email_verify_otp(
     current_user: auth_dto.CurrentUser = Depends(verifyToken),
-    payload = formOrJsonDependGenerator(auth_rest.VerifyEmailOTPReq),
+    payload=formOrJsonDependGenerator(auth_rest.VerifyEmailOTPReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     auth_service.verifyEmailOTP(user_id=current_user.id, payload=payload)

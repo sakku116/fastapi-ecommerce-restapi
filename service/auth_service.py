@@ -1,17 +1,16 @@
 from dataclasses import asdict
-from datetime import timedelta
-from pydantic import ValidationError
 
 import jwt
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
+from pydantic import ValidationError
 
 from config.env import Env
 from core.exceptions.http import CustomHttpException
 from core.logging import logger
 from domain.dto import auth_dto
-from domain.model import otp_model, refresh_token_model, user_model
+from domain.model import otp_model, user_model, cart_model, wallet_model
 from domain.rest import auth_rest
-from repository import otp_repo, refresh_token_repo, user_repo
+from repository import otp_repo, refresh_token_repo, user_repo, cart_repo
 from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
@@ -26,12 +25,14 @@ class AuthService:
         email_util: email_util.EmailUtil = Depends(),
         otp_repo: otp_repo.OtpRepo = Depends(),
         auth_util: auth_util.AuthUtil = Depends(),
+        cart_repo: cart_repo.CartRepo = Depends(),
     ):
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
         self.email_util = email_util
         self.auth_util = auth_util
         self.otp_repo = otp_repo
+        self.cart_repo = cart_repo
 
     def login(self, payload: auth_rest.LoginReq) -> auth_rest.LoginResp:
         # check if input is email
@@ -152,7 +153,9 @@ class AuthService:
         data = self.verifyToken(token=payload.access_token.removeprefix("Bearer "))
         return auth_rest.CheckTokenRespData(**data.model_dump())
 
-    def register(self, payload: auth_rest.RegisterReq) -> auth_rest.RegisterResp:
+    def register(
+        self, payload: auth_rest.RegisterReq, bt: BackgroundTasks
+    ) -> auth_rest.RegisterResp:
         # validate password
         if len(payload.password) < 6:
             exc = CustomHttpException(
@@ -215,6 +218,29 @@ class AuthService:
                 raise exc
 
         self.user_repo.create(data=new_user)
+
+        # create necessary user data in the backgrounds
+        def initUserData(user_id: str):
+            time_now = helper.timeNow()
+
+            # cart
+            logger.debug(f"creating wallet for user {user_id}")
+            cart = cart_model.CartModel(
+                id=helper.generateUUID4(),
+                created_at=time_now,
+                updated_at=time_now,
+                user_id=user_id,
+            )
+            try:
+                self.cart_repo.create(cart=cart)
+            except Exception as e:
+                logger.error(f"error creating cart for user {user_id}: {e}")
+
+            # cart
+            logger.debug(f"creating wallet for user {user_id}")
+            # TODO
+
+        bt.add_task(initUserData, user_id=new_user.id)
 
         # generate access token and refresh token
         access_token, refresh_token = self.auth_util.generateAccessTokenAndRefreshToken(
