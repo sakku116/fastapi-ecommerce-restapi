@@ -2,6 +2,8 @@ from domain.model import base_model
 from datetime import datetime
 from domain.enum import wallet_enum
 from typing import Optional
+from pydantic import field_validator
+from utils import helper
 
 class WalletModel(base_model.MyBaseModel):
     """
@@ -15,7 +17,6 @@ class WalletModel(base_model.MyBaseModel):
 
     user_id: str
     balance: float = 0
-    currency: str = "USD"
 
 class WalletTransactionModel(base_model.MyBaseModel):
     _coll_name = "wallet_transactions"
