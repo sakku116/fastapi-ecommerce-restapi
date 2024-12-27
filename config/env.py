@@ -48,3 +48,10 @@ class Env:
     GOOGLE_OAUTH2_ANDROID_CLIENT_SECRET: str = os.getenv(
         "GOOGLE_OAUTH2_ANDROID_CLIENT_SECRET", ""
     )
+    GOOGLE_OAUTH2_IOS_CLIENT_ID: str = os.getenv(
+        "GOOGLE_OAUTH2_IOS_CLIENT_ID", ""
+    )
+    GOOGLE_OAUTH2_IOS_CLIENT_SECRET: str = os.getenv(
+        "GOOGLE_OAUTH2_IOS_CLIENT_SECRET", ""
+    )
+
