@@ -1,7 +1,6 @@
-from dataclasses import dataclass
-
 from fastapi import Form
-from pydantic import BaseModel, field_validator
+from domain.enum import auth_enum
+from pydantic import BaseModel
 
 from domain.dto import auth_dto
 
@@ -72,3 +71,7 @@ class ChangeForgottenPasswordReq(BaseModel):
     otp_id: str = Form()
     new_password: str = Form()
     confirm_password: str = Form()
+
+class ExchangeOAuth2TokenReq(BaseModel):
+    provider: auth_enum.OAuth2Provider = Form()
+    code: str = Form()

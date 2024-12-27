@@ -15,6 +15,9 @@ from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
 from utils.service import auth_util, email_util
+from domain.enum import auth_enum
+from config.setting import Setting
+from urllib.parse import urlencode
 
 
 class AuthService:
@@ -516,3 +519,9 @@ class AuthService:
             )
             logger.error(exc)
             raise exc
+
+    def exchangeOAuth2Token(self, payload: auth_rest.ExchangeOAuth2TokenReq) -> str:
+        if payload.provider == auth_enum.OAuth2Provider.GOOGLE:
+            pass
+        else:
+            raise CustomHttpException(status_code=400, message="unknown provider")

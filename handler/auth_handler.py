@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi.responses import RedirectResponse
 
-from domain.rest import auth_rest, generic_resp
-from utils import request as req_utils
-from service import auth_service
+from core.dependencies import formOrJsonDependGenerator, verifyToken
 from domain.dto import auth_dto
-from core.dependencies import verifyToken, formOrJsonDependGenerator
+from domain.enum import auth_enum
+from domain.rest import auth_rest, generic_resp
+from service import auth_service
+from utils import request as req_utils
 
 AuthRouter = APIRouter(
     prefix="/auth",
@@ -60,6 +62,18 @@ def login(
     )
     return resp
 
+@AuthRouter.post(
+    "/oauth2/{provider}/token",
+    openapi_extra={
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.ExchangeOAuth2TokenReq)
+    },
+)
+def exchange_oauth2_token(
+    payload = formOrJsonDependGenerator(auth_rest.ExchangeOAuth2TokenReq),
+    auth_service: auth_service.AuthService = Depends(),
+):
+    redirect_url = auth_service.exchangeOAuth2Token(payload=payload)
+    return RedirectResponse(redirect_url)
 
 @AuthRouter.post(
     "/refresh-token",
