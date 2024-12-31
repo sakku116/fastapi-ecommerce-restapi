@@ -1,13 +1,16 @@
 from dataclasses import asdict
+from urllib.parse import urlencode
 
 import jwt
-from fastapi import BackgroundTasks, Depends
+from fastapi import BackgroundTasks, Depends, Request
 from pydantic import ValidationError
 
 from config.env import Env
+from config.setting import Setting
 from core.exceptions.http import CustomHttpException
 from core.logging import logger
 from domain.dto import auth_dto
+from domain.enum import auth_enum
 from domain.model import cart_model, otp_model, user_model, wallet_model
 from domain.rest import auth_rest
 from repository import cart_repo, otp_repo, refresh_token_repo, user_repo, wallet_repo
@@ -15,9 +18,6 @@ from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
 from utils.service import auth_util, email_util
-from domain.enum import auth_enum
-from config.setting import Setting
-from urllib.parse import urlencode
 
 
 class AuthService:
@@ -519,6 +519,19 @@ class AuthService:
             )
             logger.error(exc)
             raise exc
+
+    def loginOauth2(self, request: Request, provider: auth_enum.OAuth2Provider) -> str:
+        if provider == auth_enum.OAuth2Provider.GOOGLE:
+            params = {
+                "client_id": Env.GOOGLE_OAUTH2_WEB_CLIENT_ID,
+                "redirect_uri": f"{request.url.scheme}://{request.url.netloc}/{Setting.OAUTH2_GOOGLE.callback_url_relative}",
+                "scope": Setting.OAUTH2_GOOGLE.scope,
+                "response_type": Setting.OAUTH2_GOOGLE.response_type,
+            }
+
+            return Setting.OAUTH2_GOOGLE.auth_url + "?" + urlencode(params)
+        else:
+            raise CustomHttpException(status_code=400, message="unknown provider")
 
     def exchangeOAuth2Token(self, payload: auth_rest.ExchangeOAuth2TokenReq) -> str:
         if payload.provider == auth_enum.OAuth2Provider.GOOGLE:

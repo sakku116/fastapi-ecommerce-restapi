@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import RedirectResponse
 
 from core.dependencies import formOrJsonDependGenerator, verifyToken
@@ -7,6 +7,7 @@ from domain.enum import auth_enum
 from domain.rest import auth_rest, generic_resp
 from service import auth_service
 from utils import request as req_utils
+from typing import Literal
 
 AuthRouter = APIRouter(
     prefix="/auth",
@@ -62,18 +63,39 @@ def login(
     )
     return resp
 
+
+@AuthRouter.get(
+    "/oauth2/{provider}/login",
+    description="this endpoint used for development purpose. authorize from client instead. use localhost instead 0.0.0.0 for local development",
+)
+def oauth2_login(
+    request: Request,
+    provider: auth_enum.OAuth2Provider,
+    return_type: Literal["redirect", "url"] = "redirect",
+    auth_service: auth_service.AuthService = Depends(),
+):
+    redirect_url = auth_service.loginOauth2(request=request, provider=provider)
+    if return_type == "url":
+        return redirect_url
+    else:
+        return RedirectResponse(redirect_url)
+
+
 @AuthRouter.post(
     "/oauth2/{provider}/token",
     openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(auth_rest.ExchangeOAuth2TokenReq)
+        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
+            auth_rest.ExchangeOAuth2TokenReq
+        )
     },
 )
 def exchange_oauth2_token(
-    payload = formOrJsonDependGenerator(auth_rest.ExchangeOAuth2TokenReq),
+    payload=formOrJsonDependGenerator(auth_rest.ExchangeOAuth2TokenReq),
     auth_service: auth_service.AuthService = Depends(),
 ):
     redirect_url = auth_service.exchangeOAuth2Token(payload=payload)
     return RedirectResponse(redirect_url)
+
 
 @AuthRouter.post(
     "/refresh-token",
