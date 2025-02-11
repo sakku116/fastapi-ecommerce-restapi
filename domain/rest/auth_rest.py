@@ -1,8 +1,10 @@
+from typing import Optional
+
 from fastapi import Form
-from domain.enum import auth_enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from domain.dto import auth_dto
+from domain.enum import auth_enum
 
 from .generic_resp import RespData
 
@@ -14,6 +16,7 @@ class BaseTokenResp(BaseModel):
     also my mobile client GUY need it inside of the `data` field.
     so this base token resp model need to be inherited to response model and passed in `data` field at the same time
     """
+
     access_token: str
     refresh_token: str
 
@@ -24,6 +27,15 @@ class LoginReq(BaseModel):
 
 
 class LoginResp(RespData, BaseTokenResp):
+    pass
+
+
+class ExchangeOauth2TokenReq(BaseModel):
+    code: str = Field(...)
+    client_type: auth_enum.OAuth2ClientType = Field(None, description="required when provider is google")
+
+
+class ExchangeOAuth2TokenResp(RespData, BaseTokenResp):
     pass
 
 
@@ -54,24 +66,25 @@ class CheckTokenReq(BaseModel):
 class CheckTokenRespData(auth_dto.CurrentUser):
     pass
 
+
 class VerifyEmailOTPReq(BaseModel):
     otp_code: str = Form()
 
+
 class SendEmailForgotPasswordOTPReq(BaseModel):
     email: str = Form()
+
 
 class VerifyForgotPasswordOTPReq(BaseModel):
     email: str = Form()
     otp_code: str = Form()
 
+
 class VerifyForgotPasswordOTPRespData(BaseModel):
     otp_id: str = ""
+
 
 class ChangeForgottenPasswordReq(BaseModel):
     otp_id: str = Form()
     new_password: str = Form()
     confirm_password: str = Form()
-
-class ExchangeOAuth2TokenReq(BaseModel):
-    provider: auth_enum.OAuth2Provider = Form()
-    code: str = Form()

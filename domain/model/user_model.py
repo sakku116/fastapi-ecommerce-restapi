@@ -100,3 +100,4 @@ class UserModel(MyBaseModel, PublicUserModel):
     ]
 
     password: str = ""
+    google_oauth2: bool = False

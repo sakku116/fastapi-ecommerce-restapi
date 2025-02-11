@@ -66,7 +66,12 @@ def login(
 
 @AuthRouter.get(
     "/oauth2/{provider}/login",
-    description="this endpoint used for development purpose. authorize from client instead. use localhost instead 0.0.0.0 for local development",
+    description="""
+    \nthis generate redirect url for authorization using web client (if google).
+    \n**WARNING:** this endpoint used for development purpose.
+    \nauthorize from client instead.
+    \nuse localhost instead 0.0.0.0 for local development.
+""",
 )
 def oauth2_login(
     request: Request,
@@ -81,20 +86,17 @@ def oauth2_login(
         return RedirectResponse(redirect_url)
 
 
-@AuthRouter.post(
+@AuthRouter.get(
     "/oauth2/{provider}/token",
-    openapi_extra={
-        "requestBody": req_utils.generateFormOrJsonOpenapiBody(
-            auth_rest.ExchangeOAuth2TokenReq
-        )
-    },
+    response_model=auth_rest.ExchangeOAuth2TokenResp,
 )
 def exchange_oauth2_token(
-    payload=formOrJsonDependGenerator(auth_rest.ExchangeOAuth2TokenReq),
+    provider: auth_enum.OAuth2Provider,
+    payload: auth_rest.ExchangeOauth2TokenReq = Depends(),
     auth_service: auth_service.AuthService = Depends(),
 ):
-    redirect_url = auth_service.exchangeOAuth2Token(payload=payload)
-    return RedirectResponse(redirect_url)
+    resp = auth_service.exchangeOAuth2Token(provider=provider, payload=payload)
+    return resp
 
 
 @AuthRouter.post(

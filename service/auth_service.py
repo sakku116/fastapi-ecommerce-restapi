@@ -13,7 +13,14 @@ from domain.dto import auth_dto
 from domain.enum import auth_enum
 from domain.model import cart_model, otp_model, user_model, wallet_model
 from domain.rest import auth_rest
-from repository import cart_repo, otp_repo, refresh_token_repo, user_repo, wallet_repo
+from repository import (
+    cart_repo,
+    oauth2_repo,
+    otp_repo,
+    refresh_token_repo,
+    user_repo,
+    wallet_repo,
+)
 from utils import bcrypt as bcrypt_utils
 from utils import helper
 from utils import jwt as jwt_utils
@@ -30,6 +37,7 @@ class AuthService:
         auth_util: auth_util.AuthUtil = Depends(),
         cart_repo: cart_repo.CartRepo = Depends(),
         wallet_repo: wallet_repo.WalletRepo = Depends(),
+        oauth2_repo: oauth2_repo.Oauth2Repo = Depends(),
     ):
         self.user_repo = user_repo
         self.refresh_token_repo = refresh_token_repo
@@ -38,6 +46,7 @@ class AuthService:
         self.otp_repo = otp_repo
         self.cart_repo = cart_repo
         self.wallet_repo = wallet_repo
+        self.oauth2_repo = oauth2_repo
 
     def login(self, payload: auth_rest.LoginReq) -> auth_rest.LoginResp:
         # check if input is email
@@ -521,6 +530,9 @@ class AuthService:
             raise exc
 
     def loginOauth2(self, request: Request, provider: auth_enum.OAuth2Provider) -> str:
+        """
+        uses client id and secret for web application (for development purpose)
+        """
         if provider == auth_enum.OAuth2Provider.GOOGLE:
             params = {
                 "client_id": Env.GOOGLE_OAUTH2_WEB_CLIENT_ID,
@@ -533,8 +545,58 @@ class AuthService:
         else:
             raise CustomHttpException(status_code=400, message="unknown provider")
 
-    def exchangeOAuth2Token(self, payload: auth_rest.ExchangeOAuth2TokenReq) -> str:
-        if payload.provider == auth_enum.OAuth2Provider.GOOGLE:
-            pass
+    def exchangeOAuth2Token(
+        self,
+        provider: auth_enum.OAuth2Provider,
+        payload: auth_rest.ExchangeOauth2TokenReq,
+    ) -> auth_rest.ExchangeOAuth2TokenResp:
+        if provider == auth_enum.OAuth2Provider.GOOGLE:
+            # google oauth2 require client type
+            if not payload.client_type:
+                exc = CustomHttpException(
+                    status_code=400, message="client_type is required for google oauth2"
+                )
+                logger.debug(exc)
+                raise exc
+
+            if payload.client_type == auth_enum.OAuth2ClientType.WEB:
+                client_id, client_secret = (
+                    Env.GOOGLE_OAUTH2_WEB_CLIENT_ID,
+                    Env.GOOGLE_OAUTH2_WEB_CLIENT_SECRET,
+                )
+            elif payload.client_type == auth_enum.OAuth2ClientType.ANDROID:
+                client_id, client_secret = (
+                    Env.GOOGLE_OAUTH2_ANDROID_CLIENT_ID,
+                    Env.GOOGLE_OAUTH2_ANDROID_CLIENT_SECRET,
+                )
+            elif payload.client_type == auth_enum.OAuth2ClientType.IOS:
+                client_id, client_secret = (
+                    Env.GOOGLE_OAUTH2_IOS_CLIENT_ID,
+                    Env.GOOGLE_OAUTH2_IOS_CLIENT_SECRET,
+                )
+            else:
+                raise CustomHttpException(
+                    status_code=400, message="unknown client_type"
+                )
+
+            # exchange
+            token_data = {
+                "code": payload.code,
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "redirect_uri": f"http://localhost:8000/{Setting.OAUTH2_GOOGLE.callback_url_relative}",
+                "grant_type": "authorization_code",
+            }
+            try:
+                resp = self.oauth2_repo.reqExchangeOAuth2Token(payload=token_data)
+            except Exception as e:
+                exc = CustomHttpException(
+                    status_code=500, message="failed to exchange", detail=str(e)
+                )
+                logger.error(exc)
+                raise exc
+
+            logger.debug(f"resp: {resp}")
+
         else:
             raise CustomHttpException(status_code=400, message="unknown provider")

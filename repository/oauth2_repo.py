@@ -5,15 +5,16 @@ from requests.exceptions import HTTPError, JSONDecodeError
 from core.logging import logger
 
 
-class GoogleRepo:
+class Oauth2Repo:
     def __init__(self):
         pass
 
-    def reqExchangeOAuth2Token(self, payload):
+    def reqExchangeOAuth2Token(self, payload: dict):
         url = f"{Setting.OAUTH2_GOOGLE.token_url}"
 
         resp_json = None
         try:
+            logger.debug(f"requesting GET {url}")
             resp = requests.post(url=url, data=payload)
             resp.raise_for_status()
             return resp.json()
